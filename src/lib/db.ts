@@ -182,7 +182,8 @@ export function getDb(): Promise<Db> {
       const db = await createDb();
       if (process.env.AUTO_MIGRATE !== 'false') {
         await migrate(db);
-        await seedMaster(db);
+        const [c] = await db.query<{ s: number; q: number }>("SELECT (SELECT count(*) FROM stores)::int AS s, (SELECT count(*) FROM questions)::int AS q");
+        if (c.s < 3 || c.q < 60) await seedMaster(db);
       }
       return db;
     })();

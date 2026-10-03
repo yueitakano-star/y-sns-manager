@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { getDb } from './db';
-import { getSessionUser, type SessionUser } from './auth';
+import { randomBytes } from 'node:crypto';
+import { createUser, getSessionUser, type SessionUser } from './auth';
 import { getStoreForActor, listAccessibleStores, type Store } from './access';
 import type { Role } from './constants';
 import { AppError } from './errors';
@@ -22,7 +23,19 @@ export const cookieOptions = (expires?: Date) => ({
 export const currentUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const db = await getDb();
-  return getSessionUser(db, token);
+  const u = await getSessionUser(db, token);
+  if (u) return u;
+  // 一時的なログイン省略（ローカル組み込みDB専用）。共有DB(DATABASE_URL)では無効
+  if (process.env.DEV_NO_AUTH === 'true' && !process.env.DATABASE_URL) {
+    const email = 'local-dev@example.local';
+    let rows = await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email]);
+    if (!rows[0]) {
+      const id = await createUser(db, { email, displayName: 'ローカル利用者', password: randomBytes(24).toString('base64url'), isSystemAdmin: true });
+      rows = [{ id }];
+    }
+    return { userId: rows[0].id, email, displayName: 'ローカル利用者', isSystemAdmin: true };
+  }
+  return null;
 });
 
 export async function requireUser(): Promise<SessionUser> {
