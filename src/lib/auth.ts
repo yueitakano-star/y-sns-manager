@@ -7,7 +7,7 @@ import type { Actor } from './access';
 const SESSION_DAYS = 14;
 
 export interface SessionUser extends Actor {
-  email: string;
+  email: string | null;
   displayName: string;
 }
 
@@ -36,53 +36,54 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-// ログイン試行の簡易レート制限（メール単位・プロセス内）。本番で複数インスタンスなら前段のWAF等も併用すること
-const attempts = new Map<string, { count: number; first: number }>();
-const WINDOW_MS = 15 * 60 * 1000;
-const MAX_ATTEMPTS = 8;
+// 連続失敗でアカウントを一時ロック（DBに保存するのでサーバーレスの複数インスタンスでも有効）
+const MAX_FAILS = 5;
+const LOCK_MINUTES = 15;
 
-function checkRate(key: string): void {
-  const now = Date.now();
-  const a = attempts.get(key);
-  if (a && now - a.first < WINDOW_MS && a.count >= MAX_ATTEMPTS) {
-    throw new AppError('forbidden', 'ログインの試行回数が上限に達しました。しばらく待ってからやり直してください。');
-  }
-}
-function recordFailure(key: string): void {
-  const now = Date.now();
-  const a = attempts.get(key);
-  if (!a || now - a.first >= WINDOW_MS) attempts.set(key, { count: 1, first: now });
-  else a.count += 1;
+export function normalizeLoginName(name: string): string {
+  return name.trim().normalize('NFKC');
 }
 
-/** メール+パスワードで認証し、セッショントークン(生値)を返す */
-export async function login(db: Db, emailRaw: string, password: string): Promise<{ token: string; expires: Date }> {
-  const email = normalizeEmail(emailRaw);
-  checkRate(email);
-  const rows = await db.query<{ id: string; password_hash: string; is_active: boolean }>(
-    'SELECT id, password_hash, is_active FROM users WHERE email = $1',
-    [email],
+export function validatePin(pin: string): string | null {
+  if (!/^\d{4,8}$/.test(pin)) return 'PINは4〜8桁の数字にしてください。';
+  return null;
+}
+
+/** メール+パスワード、または 名前+PIN で認証し、セッショントークン(生値)を返す */
+export async function login(db: Db, identifierRaw: string, secret: string): Promise<{ token: string; expires: Date }> {
+  const identifier = identifierRaw.trim();
+  const byEmail = identifier.includes('@');
+  const rows = await db.query<{ id: string; password_hash: string; is_active: boolean; failed_count: number; locked: boolean }>(
+    `SELECT id, password_hash, is_active, failed_count, (locked_until IS NOT NULL AND locked_until > now()) AS locked
+       FROM users WHERE ${byEmail ? 'email = $1' : 'login_name = $1'}`,
+    [byEmail ? normalizeEmail(identifier) : normalizeLoginName(identifier)],
   );
   const u = rows[0];
-  const ok = u ? verifyPassword(password, u.password_hash) : (verifyPassword(password, 'scrypt$00$00'), false);
-  if (!u || !ok || !u.is_active) {
-    recordFailure(email);
-    throw new AppError('unauthenticated', 'メールアドレスまたはパスワードが正しくありません。');
+  if (u?.locked) {
+    throw new AppError('forbidden', `失敗が続いたため一時的にロックしています。${LOCK_MINUTES}分ほど待ってからやり直してください。`);
   }
-  attempts.delete(email);
+  const ok = u ? verifyPassword(secret, u.password_hash) : (verifyPassword(secret, 'scrypt$00$00'), false);
+  if (!u || !ok || !u.is_active) {
+    if (u) {
+      await db.query(
+        `UPDATE users SET failed_count = failed_count + 1,
+                locked_until = CASE WHEN failed_count + 1 >= $2 THEN now() + make_interval(mins => $3::int) ELSE locked_until END
+          WHERE id = $1`,
+        [u.id, MAX_FAILS, LOCK_MINUTES],
+      );
+    }
+    throw new AppError('unauthenticated', '名前（メール）またはパスワード（PIN）が正しくありません。');
+  }
+  await db.query('UPDATE users SET failed_count = 0, locked_until = NULL WHERE id = $1', [u.id]);
   const token = crypto.randomBytes(32).toString('base64url');
   const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
-  await db.query('INSERT INTO sessions(token_hash, user_id, expires_at) VALUES ($1,$2,$3)', [
-    sha256(token),
-    u.id,
-    expires.toISOString(),
-  ]);
+  await db.query('INSERT INTO sessions(token_hash, user_id, expires_at) VALUES ($1,$2,$3)', [sha256(token), u.id, expires.toISOString()]);
   return { token, expires };
 }
 
 export async function getSessionUser(q: Queryable, token: string | undefined): Promise<SessionUser | null> {
   if (!token) return null;
-  const rows = await q.query<{ id: string; email: string; display_name: string; is_system_admin: boolean }>(
+  const rows = await q.query<{ id: string; email: string | null; display_name: string; is_system_admin: boolean }>(
     `SELECT u.id, u.email, u.display_name, u.is_system_admin
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = $1 AND s.expires_at > now() AND u.is_active`,
@@ -98,36 +99,55 @@ export async function logout(q: Queryable, token: string | undefined): Promise<v
 }
 
 export interface NewUser {
-  email: string;
+  /** メール+パスワードで入る人 */
+  email?: string;
+  password?: string;
+  /** 名前+PINで入る担当者 */
+  loginName?: string;
+  pin?: string;
   displayName: string;
-  password: string;
   isSystemAdmin?: boolean;
   memberships?: { storeId: string; role: Role }[];
 }
 
 /** 管理者による招待（アカウント作成＋店舗権限付与）。自己登録の経路は存在しない */
 export async function createUser(db: Db, input: NewUser): Promise<string> {
-  const email = normalizeEmail(input.email);
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw validation('メールアドレスの形式が正しくありません。', { email: '形式が正しくありません。' });
-  const pwErr = validatePasswordStrength(input.password);
-  if (pwErr) throw validation(pwErr, { password: pwErr });
-  if (!input.displayName.trim()) throw validation('表示名を入力してください。', { displayName: '入力してください。' });
+  const email = input.email ? normalizeEmail(input.email) : null;
+  const loginName = input.loginName ? normalizeLoginName(input.loginName) : null;
+  let secret: string;
+  if (loginName) {
+    if (loginName.includes('@')) throw validation('名前に @ は使えません。', { loginName: '@ は使えません。' });
+    const e = validatePin(input.pin ?? '');
+    if (e) throw validation(e, { pin: e });
+    secret = input.pin as string;
+  } else {
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw validation('メールアドレスの形式が正しくありません。', { email: '形式が正しくありません。' });
+    const pwErr = validatePasswordStrength(input.password ?? '');
+    if (pwErr) throw validation(pwErr, { password: pwErr });
+    secret = input.password as string;
+  }
+  const displayName = (input.displayName || loginName || '').trim();
+  if (!displayName) throw validation('表示名を入力してください。', { displayName: '入力してください。' });
   return db.tx(async (q) => {
-    const exists = await q.query('SELECT 1 FROM users WHERE email = $1', [email]);
-    if (exists.length) throw validation('このメールアドレスは既に登録されています。', { email: '既に登録されています。' });
+    if (email && (await q.query('SELECT 1 FROM users WHERE email = $1', [email])).length) throw validation('このメールアドレスは既に登録されています。', { email: '既に登録されています。' });
+    if (loginName && (await q.query('SELECT 1 FROM users WHERE login_name = $1', [loginName])).length) throw validation('この名前は既に使われています。', { loginName: '既に使われています。' });
     const rows = await q.query<{ id: string }>(
-      `INSERT INTO users(email, display_name, password_hash, is_system_admin) VALUES ($1,$2,$3,$4) RETURNING id`,
-      [email, input.displayName.trim(), hashPassword(input.password), !!input.isSystemAdmin],
+      `INSERT INTO users(email, login_name, display_name, password_hash, is_system_admin) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      [email, loginName, displayName, hashPassword(secret), !!input.isSystemAdmin],
     );
     for (const m of input.memberships ?? []) {
-      await q.query('INSERT INTO user_store_memberships(user_id, store_id, role) VALUES ($1,$2,$3)', [
-        rows[0].id,
-        m.storeId,
-        m.role,
-      ]);
+      await q.query('INSERT INTO user_store_memberships(user_id, store_id, role) VALUES ($1,$2,$3)', [rows[0].id, m.storeId, m.role]);
     }
     return rows[0].id;
   });
+}
+
+/** PINの再設定（管理者用）。ロックも解除する */
+export async function setPin(q: Queryable, userId: string, pin: string): Promise<void> {
+  const e = validatePin(pin);
+  if (e) throw validation(e, { pin: e });
+  const r = await q.query('UPDATE users SET password_hash = $2, failed_count = 0, locked_until = NULL, updated_at = now() WHERE id = $1 AND login_name IS NOT NULL RETURNING id', [userId, hashPassword(pin)]);
+  if (!r.length) throw validation('PINログインのユーザーではありません。');
 }
 
 export async function setMembership(q: Queryable, userId: string, storeId: string, role: Role | null): Promise<void> {

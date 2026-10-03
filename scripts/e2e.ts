@@ -63,8 +63,8 @@ function startServer(): Promise<ChildProcess> {
 
 async function login(page: Page, email: string, pw: string) {
   await page.goto(`${BASE}/login`);
-  await page.getByLabel('メールアドレス').fill(email);
-  await page.getByLabel('パスワード').fill(pw);
+  await page.getByLabel('名前 または メールアドレス').fill(email);
+  await page.getByLabel('PIN または パスワード').fill(pw);
   await page.getByRole('button', { name: 'ログイン' }).click();
 }
 

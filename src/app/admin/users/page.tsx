@@ -12,8 +12,8 @@ export default async function AdminUsersPage() {
   if (!me.isSystemAdmin) redirect('/');
   const db = await getDb();
   const stores = await db.query<{ id: string; name: string }>('SELECT id, name FROM stores ORDER BY sort_order');
-  const users = await db.query<{ id: string; email: string; display_name: string; is_system_admin: boolean; is_active: boolean }>(
-    'SELECT id, email, display_name, is_system_admin, is_active FROM users ORDER BY created_at',
+  const users = await db.query<{ id: string; email: string | null; login_name: string | null; display_name: string; is_system_admin: boolean; is_active: boolean }>(
+    'SELECT id, email, login_name, display_name, is_system_admin, is_active FROM users ORDER BY created_at',
   );
   const ms = await db.query<{ user_id: string; store_id: string; role: Role }>('SELECT user_id, store_id, role FROM user_store_memberships');
   return (

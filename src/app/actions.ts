@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { getDb } from '@/lib/db';
-import { createUser, login, logout, setMembership } from '@/lib/auth';
+import { createUser, login, logout, setMembership, setPin } from '@/lib/auth';
 import { getStoreForActor } from '@/lib/access';
 import { AppError, forbidden } from '@/lib/errors';
 import { SESSION_COOKIE, cookieOptions, currentUser, requireUser } from '@/lib/session';
@@ -172,9 +172,11 @@ async function requireSystemAdmin() {
 }
 
 export async function inviteUserAction(input: {
-  email: string;
+  email?: string;
+  password?: string;
+  loginName?: string;
+  pin?: string;
   displayName: string;
-  password: string;
   memberships: { storeId: string; role: Role }[];
 }) {
   return run(async () => {
@@ -182,7 +184,21 @@ export async function inviteUserAction(input: {
     const db = await getDb();
     const valid = new Set((await db.query<{ id: string }>('SELECT id FROM stores')).map((s) => s.id));
     const memberships = (input.memberships ?? []).filter((m) => valid.has(m.storeId) && ['admin', 'editor', 'viewer'].includes(m.role));
-    await createUser(db, { email: String(input.email ?? ''), displayName: String(input.displayName ?? ''), password: String(input.password ?? ''), memberships });
+    await createUser(db, {
+      email: input.email ? String(input.email) : undefined,
+      password: input.password ? String(input.password) : undefined,
+      loginName: input.loginName ? String(input.loginName) : undefined,
+      pin: input.pin ? String(input.pin) : undefined,
+      displayName: String(input.displayName ?? ''),
+      memberships,
+    });
+  });
+}
+
+export async function setUserPinAction(userId: string, pin: string) {
+  return run(async () => {
+    await requireSystemAdmin();
+    await setPin(await getDb(), String(userId), String(pin ?? ''));
   });
 }
 
