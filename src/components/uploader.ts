@@ -12,7 +12,10 @@ export async function uploadOne(storeKey: string, itemId: string, file: File): P
     form.append('cacheControl', '3600');
     form.append('', file);
     const res = await fetch(prep.data.uploadUrl, { method: 'PUT', headers: { 'x-upsert': 'false' }, body: form });
-    if (!res.ok) return `「${file.name}」のアップロードに失敗しました（${res.status}）。`;
+    if (!res.ok) {
+      const detail = (await res.text().catch(() => '')).slice(0, 160);
+      return `「${file.name}」のアップロードに失敗しました（${res.status}）${detail ? ` ${detail}` : ''}`;
+    }
     const reg = await registerFileAction(storeKey, itemId, { ...meta, path: prep.data.path });
     return reg.ok ? null : reg.message;
   } catch {

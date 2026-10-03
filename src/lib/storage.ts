@@ -1,3 +1,5 @@
+import { AppError } from './errors';
+
 /** Supabase Storage（非公開バケット）へのアクセス。サービスキーはサーバー専用で、ブラウザには署名付きURLだけを渡す */
 export interface StorageApi {
   configured(): boolean;
@@ -17,7 +19,8 @@ async function call(method: string, path: string, body?: unknown): Promise<Respo
   return fetch(`${base()}/storage/v1${path}`, {
     method,
     headers: { Authorization: `Bearer ${key()}`, apikey: key(), 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    // Supabase(Fastify)は JSON指定で本文が空だと400になるため、POSTは必ず {} 以上を送る
+    body: method === 'POST' || body !== undefined ? JSON.stringify(body ?? {}) : undefined,
     cache: 'no-store',
   });
 }
@@ -26,7 +29,7 @@ export const supabaseStorage: StorageApi = {
   configured: () => !!(base() && key()),
   async createUploadUrl(path) {
     const r = await call('POST', `/object/upload/sign/${bucket()}/${enc(path)}`);
-    if (!r.ok) throw new Error(`upload url failed: ${r.status}`);
+    if (!r.ok) throw new AppError('validation', `保存先(Supabase Storage)でエラーが出ました（${r.status}）: ${(await r.text()).slice(0, 200)}`);
     const j = (await r.json()) as { url: string };
     return `${base()}/storage/v1${j.url}`;
   },
