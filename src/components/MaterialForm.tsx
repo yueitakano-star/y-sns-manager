@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createInterviewAction, createMaterialAction } from '@/app/actions';
-import { CATEGORIES, CATEGORY_BY_KEY, MATERIAL_STATES, MEDIA_LABEL, UNIT, setLabel, type AnswerStatus, type CategoryKey, type MaterialStatus, type MediaKind } from '@/lib/constants';
+import { CATEGORIES, CATEGORY_BY_KEY, MATERIAL_STATES, PURPOSES, MEDIA_LABEL, UNIT, setLabel, type AnswerStatus, type CategoryKey, type MaterialStatus, type MediaKind } from '@/lib/constants';
 import { ErrorBanner, Field, newRequestKey, toNum, useSubmitter } from './forms';
 import { uploadOne } from './uploader';
 
@@ -34,6 +34,7 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
   const [status, setStatus] = useState<MaterialStatus>('captured');
   const [storageUrl, setStorageUrl] = useState('');
   const [memo, setMemo] = useState('');
+  const [purpose, setPurpose] = useState('sns');
   const [setId, setSetId] = useState('');
   const [takeNo, setTakeNo] = useState('');
   const [answers, setAnswers] = useState<Record<string, Ans>>({});
@@ -109,7 +110,7 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
       return;
     }
     void submit(
-      () => createMaterialAction(storeKey, { requestKey, category, otherLabel, mediaKind, quantity: toNum(quantity), castIds: common ? [] : castIds, shotOn, title, status, storageUrl, memo }),
+      () => createMaterialAction(storeKey, { requestKey, purpose, category, otherLabel, mediaKind, quantity: toNum(quantity), castIds: common ? [] : castIds, shotOn, title, status, storageUrl, memo }),
       (d) => finish(d),
     );
   }
@@ -260,6 +261,11 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
           )}
         </div>
         {preview ? <p className="text-sm text-mat-700" data-testid="qty-preview">{preview}</p> : null}
+        <Field label="ファイルの用途" htmlFor="purpose" error={fields.purpose}>
+          <select id="purpose" className="input" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+            {PURPOSES.map((p) => (<option key={p.key} value={p.key}>{p.name}</option>))}
+          </select>
+        </Field>
         <Field label="保存場所URL（任意）" htmlFor="storageUrl" error={fields.storageUrl} hint="Google Drive等の保管場所の記録です。サイトがファイルを取得・確認することはありません。">
           <input id="storageUrl" inputMode="url" className={cls('storageUrl')} value={storageUrl} onChange={(e) => setStorageUrl(e.target.value)} placeholder="https://" />
         </Field>

@@ -13,12 +13,12 @@ import {
   voidBatchAction,
   voidItemsAction,
 } from '@/app/actions';
-import { ANSWER_LABEL, MATERIAL_STATES, type AnswerStatus, type MaterialStatus } from '@/lib/constants';
+import { ANSWER_LABEL, MATERIAL_STATES, PURPOSES, type AnswerStatus, type MaterialStatus } from '@/lib/constants';
 import { removeFileAction } from '@/app/actions';
 import { ErrorBanner, Field, SuccessBanner, toNum, useSubmitter } from './forms';
 import { uploadOne } from './uploader';
 
-export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string }; today: string; showOtherLabel: boolean }) {
+export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string; purpose: string }; today: string; showOtherLabel: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [v, setV] = useState({ ...initial, applyStatusToItems: false });
@@ -52,6 +52,12 @@ export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabe
           </select>
         </Field>
       </div>
+      <Field label="ファイルの用途" htmlFor="b-purpose" error={fields.purpose}>
+        <select id="b-purpose" className="input" value={v.purpose} onChange={(e) => setV({ ...v, purpose: e.target.value })}>
+          <option value="">未設定</option>
+          {PURPOSES.map((p) => (<option key={p.key} value={p.key}>{p.name}</option>))}
+        </select>
+      </Field>
       <label className="flex min-h-11 items-center gap-2 text-sm">
         <input type="checkbox" className="size-5" checked={v.applyStatusToItems} onChange={(e) => setV({ ...v, applyStatusToItems: e.target.checked })} />
         この状態をグループ内の全個別素材にも適用する

@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { quickUploadAction } from '@/app/actions';
+import { PURPOSES } from '@/lib/constants';
 import { ErrorBanner, newRequestKey, useSubmitter } from './forms';
 import { uploadOne } from './uploader';
 
@@ -10,6 +11,7 @@ import { uploadOne } from './uploader';
 export function QuickUpload({ storeKey, base, casts, storageReady }: { storeKey: string; base: string; casts: { id: string; name: string }[]; storageReady: boolean }) {
   const [castId, setCastId] = useState('');
   const [memo, setMemo] = useState('');
+  const [purpose, setPurpose] = useState('sns');
   const [files, setFiles] = useState<File[]>([]);
   const [progress, setProgress] = useState<string | null>(null);
   const [done, setDone] = useState<{ batchId: string; ok: number; failed: number }[] | null>(null);
@@ -41,7 +43,7 @@ export function QuickUpload({ storeKey, base, casts, storageReady }: { storeKey:
     const images = files.filter((f) => !isVideo(f));
     const videos = files.filter(isVideo);
     void submit(
-      () => quickUploadAction(storeKey, { requestKey, castId: castId || null, memo, images: images.length, videos: videos.length }),
+      () => quickUploadAction(storeKey, { requestKey, castId: castId || null, memo, purpose, images: images.length, videos: videos.length }),
       async (d) => {
         const results: { batchId: string; ok: number; failed: number }[] = [];
         let n = 0;
@@ -84,6 +86,17 @@ export function QuickUpload({ storeKey, base, casts, storageReady }: { storeKey:
             {casts.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
           </select>
         </div>
+        <fieldset>
+          <legend className="label">用途</legend>
+          <div className="flex gap-2" role="radiogroup" aria-label="ファイルの用途">
+            {PURPOSES.map((p) => (
+              <label key={p.key} className="btn-sub flex-1 cursor-pointer has-[:checked]:!border-mat-600 has-[:checked]:!bg-mat-600 has-[:checked]:!text-white">
+                <input type="radio" name="q-purpose" className="sr-only" checked={purpose === p.key} onChange={() => setPurpose(p.key)} />
+                {p.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
         <div>
           <label htmlFor="q-memo" className="label">備考（任意）</label>
           <textarea id="q-memo" rows={2} className="input" value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="例: 9/10 撮影分、PR用" />

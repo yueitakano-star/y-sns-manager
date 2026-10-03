@@ -504,6 +504,10 @@ describe('かんたん投稿', () => {
     expect(await stat(a.id)).toMatchObject({ images: 3, videos: 1, total_items: 4 });
     const d = await getBatchDetail(env.db, env.admin, B, r.batches[0].batchId);
     expect(d.memo).toBe('9月分');
+    expect(d.purpose).toBe('sns');
+    const ad = await createQuickUpload(env.db, env.editorB, B, { castId: a.id, purpose: 'ad', images: 1 });
+    expect((await getBatchDetail(env.db, env.admin, B, ad.batches[0].batchId)).purpose).toBe('ad');
+    expect((await listBatches(env.db, env.admin, B, { purpose: 'ad' })).map((b) => b.id)).toEqual([ad.batches[0].batchId]);
   });
   it('キャストなし(店舗共通)でも登録でき、ファイル0件・他店舗キャスト・閲覧専用は拒否', async () => {
     const k = await cast('Kの子', K);

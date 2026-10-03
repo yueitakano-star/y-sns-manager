@@ -27,10 +27,12 @@ const qtySchema = z
   .max(MAX_QTY, `数量は${MAX_QTY}以下で入力してください。`);
 
 const requestKey = z.string().min(8).max(100).nullish();
+const purposeSchema = z.enum(['sns', 'ad', 'other'], { error: '用途を選択してください。' }).nullish().transform((v) => v ?? null);
 
 const materialSchema = z.object({
   requestKey,
   category: z.enum(CATEGORY_KEYS, { error: '素材の種類を選択してください。' }),
+  purpose: purposeSchema,
   otherLabel: optStr('内容名', 60),
   mediaKind: z.enum(MEDIA, { error: '画像／動画／その他を選択してください。' }),
   quantity: qtySchema,
@@ -117,6 +119,7 @@ async function createBatchRow(
     storeId: string;
     category: CategoryKey;
     otherLabel: string | null;
+    purpose?: string | null;
     mediaKind: MediaKind;
     title: string;
     shotOn: string;
@@ -131,9 +134,9 @@ async function createBatchRow(
   const seq = await nextSeq(q, p.storeId, `batch:${catCode}`);
   const displayCode = `${stores[0].code}-${catCode}-${pad(seq, 4)}`;
   const rows = await q.query<{ id: string }>(
-    `INSERT INTO material_batches(store_id, category, other_label, media_kind, display_code, seq, title, shot_on, status, storage_url, memo, request_key, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
-    [p.storeId, p.category, p.otherLabel, p.mediaKind, displayCode, seq, p.title, p.shotOn, p.status, p.storageUrl, p.memo, p.requestKey, actor.userId],
+    `INSERT INTO material_batches(store_id, category, other_label, media_kind, display_code, seq, title, shot_on, status, storage_url, memo, request_key, created_by, purpose)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`,
+    [p.storeId, p.category, p.otherLabel, p.mediaKind, displayCode, seq, p.title, p.shotOn, p.status, p.storageUrl, p.memo, p.requestKey, actor.userId, p.purpose ?? null],
   );
   return { id: rows[0].id, displayCode };
 }
@@ -184,6 +187,7 @@ export async function createMaterial(db: Db, actor: Actor, storeId: string, inpu
       storeId,
       category: v.category,
       otherLabel: v.otherLabel,
+      purpose: v.purpose,
       mediaKind: v.mediaKind,
       title: v.title,
       shotOn: v.shotOn,
@@ -337,6 +341,7 @@ const batchUpdateSchema = z.object({
   shotOn: dateStr('撮影・作成日'),
   status: z.enum(STATUSES, { error: '作業状態を選択してください。' }),
   applyStatusToItems: z.boolean().default(false),
+  purpose: purposeSchema,
   otherLabel: optStr('内容名', 60),
   storageUrl: urlOpt('保存場所URL'),
   memo: optStr('メモ', 2000),
@@ -350,9 +355,9 @@ export async function updateBatch(db: Db, actor: Actor, storeId: string, batchId
   assertNotFuture(v.shotOn, '撮影・作成日', 'shotOn');
   await db.tx(async (q) => {
     const rows = await q.query<{ category: CategoryKey }>(
-      `UPDATE material_batches SET title=$3, shot_on=$4, status=$5, other_label=$6, storage_url=$7, memo=$8, updated_at=now()
+      `UPDATE material_batches SET title=$3, shot_on=$4, status=$5, other_label=$6, storage_url=$7, memo=$8, purpose=$9, updated_at=now()
         WHERE id=$1 AND store_id=$2 AND voided_at IS NULL RETURNING category`,
-      [batchId, storeId, v.title, v.shotOn, v.status, v.otherLabel, v.storageUrl, v.memo],
+      [batchId, storeId, v.title, v.shotOn, v.status, v.otherLabel, v.storageUrl, v.memo, v.purpose],
     );
     if (!rows[0]) throw notFound('素材');
     if (rows[0].category === 'other' && !v.otherLabel) throw validation('内容名を入力してください。', { otherLabel: '「その他」は内容名の入力が必要です。' });
@@ -507,6 +512,7 @@ export interface BatchListRow {
   used_count: number;
   cast_names: string[];
   question_set_label: string | null;
+  purpose: 'sns' | 'ad' | 'other' | null;
 }
 
 export interface BatchFilter {
@@ -515,6 +521,7 @@ export interface BatchFilter {
   status?: string;
   usage?: 'all' | 'unused' | 'used';
   common?: boolean;
+  purpose?: string;
 }
 
 export async function listBatches(q: Queryable, actor: Actor, storeId: string, f: BatchFilter = {}): Promise<BatchListRow[]> {
@@ -529,6 +536,10 @@ export async function listBatches(q: Queryable, actor: Actor, storeId: string, f
     params.push(f.status);
     where.push(`b.status = $${params.length}`);
   }
+  if (f.purpose && ['sns', 'ad', 'other'].includes(f.purpose)) {
+    params.push(f.purpose);
+    where.push(`b.purpose = ${params.length}`);
+  }
   if (f.castId && /^[0-9a-f-]{36}$/i.test(f.castId)) {
     params.push(f.castId);
     where.push(`EXISTS (SELECT 1 FROM material_items i JOIN material_item_casts ic ON ic.item_id=i.id WHERE i.batch_id=b.id AND i.voided_at IS NULL AND ic.cast_id=$${params.length})`);
@@ -537,7 +548,7 @@ export async function listBatches(q: Queryable, actor: Actor, storeId: string, f
     where.push(`NOT EXISTS (SELECT 1 FROM material_items i JOIN material_item_casts ic ON ic.item_id=i.id WHERE i.batch_id=b.id AND i.voided_at IS NULL)`);
   }
   const rows = await q.query<BatchListRow & { used_count: number }>(
-    `SELECT b.id, b.display_code, b.category, b.other_label, b.media_kind, b.title, b.shot_on, b.status,
+    `SELECT b.id, b.display_code, b.category, b.other_label, b.media_kind, b.title, b.shot_on, b.status, b.purpose,
             (SELECT count(*)::int FROM material_items i WHERE i.batch_id=b.id AND i.voided_at IS NULL) AS item_count,
             (SELECT count(DISTINCT i.id)::int FROM material_items i
                JOIN post_materials pm ON pm.item_id=i.id JOIN posts p ON p.id=pm.post_id
@@ -591,6 +602,7 @@ export interface BatchDetail {
   status: MaterialStatus;
   storage_url: string | null;
   memo: string | null;
+  purpose: 'sns' | 'ad' | 'other' | null;
   created_at: string;
   items: ItemRow[];
   voidedItems: ItemRow[];
@@ -610,7 +622,7 @@ export async function getBatchDetail(q: Queryable, actor: Actor, storeId: string
   await requireRole(q, actor, storeId, 'viewer');
   if (!/^[0-9a-f-]{36}$/i.test(batchId)) throw notFound('素材');
   const b = await q.query<Omit<BatchDetail, 'items' | 'voidedItems' | 'session' | 'posts'>>(
-    `SELECT id, store_id, display_code, category, other_label, media_kind, title, shot_on, status, storage_url, memo, created_at
+    `SELECT id, store_id, display_code, category, other_label, media_kind, title, shot_on, status, storage_url, memo, purpose, created_at
        FROM material_batches WHERE id=$1 AND store_id=$2 AND voided_at IS NULL`,
     [batchId, storeId],
   );
@@ -669,6 +681,7 @@ const quickSchema = z.object({
   requestKey,
   castId: idStr('キャスト').nullish(),
   memo: optStr('備考', 2000),
+  purpose: purposeSchema,
   images: z.number().int().min(0).max(MAX_QTY).default(0),
   videos: z.number().int().min(0).max(MAX_QTY).default(0),
 });
@@ -696,6 +709,7 @@ export async function createQuickUpload(
     const r = await createMaterial(db, actor, storeId, {
       requestKey: v.requestKey ? `${v.requestKey}:${kind}` : null,
       category: 'other',
+      purpose: v.purpose ?? 'sns',
       otherLabel: 'かんたんアップロード',
       mediaKind: kind,
       quantity: n,

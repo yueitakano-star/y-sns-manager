@@ -4,7 +4,7 @@ import { pageCtx, one, type SP } from '@/lib/page';
 import { getBatchDetail } from '@/lib/domain/materials';
 import { listCasts } from '@/lib/domain/casts';
 import { AppError } from '@/lib/errors';
-import { MEDIA_LABEL, PLATFORM_LABEL, UNIT, setLabel } from '@/lib/constants';
+import { MEDIA_LABEL, PLATFORM_LABEL, PURPOSE_LABEL, UNIT, setLabel } from '@/lib/constants';
 import { jstToday } from '@/lib/jst';
 import { Badge, LinkBtn, MaterialStatusBadge, PageHeader, PostStatusBadge, SectionTitle } from '@/components/ui';
 import { categoryName } from '@/components/lists';
@@ -49,7 +49,7 @@ export default async function MaterialDetail({ params, searchParams }: { params:
         actions={editable ? <LinkBtn href={`${base}/posts/new?${b.items.map((i) => `item=${i.id}`).join('&')}`} kind="post">この素材で投稿登録</LinkBtn> : null}
       />
       <div className="card space-y-2 text-sm">
-        <div className="flex flex-wrap gap-2"><MaterialStatusBadge status={b.status} /><Badge tone="mat">{MEDIA_LABEL[b.media_kind]} {b.items.length}{UNIT[b.media_kind]}</Badge></div>
+        <div className="flex flex-wrap gap-2"><MaterialStatusBadge status={b.status} /><Badge tone="mat">{MEDIA_LABEL[b.media_kind]} {b.items.length}{UNIT[b.media_kind]}</Badge>{b.purpose ? <Badge tone="blue">用途: {PURPOSE_LABEL[b.purpose]}</Badge> : null}</div>
         <p>出演: {castNames.length ? castNames.join('、') : '店舗共通（キャストなし）'}</p>
         {b.storage_url ? <p>保存場所: <a className="break-all underline" href={b.storage_url} target="_blank" rel="noopener noreferrer nofollow">{b.storage_url}</a></p> : <p className="text-slate-500">保存場所URLは未設定です。</p>}
         {b.memo ? <p className="whitespace-pre-wrap">メモ: {b.memo}</p> : null}
@@ -57,7 +57,7 @@ export default async function MaterialDetail({ params, searchParams }: { params:
       {editable ? (
         <div className="mt-3">
           <BatchEditForm storeKey={store.key} batchId={b.id} today={today} showOtherLabel={b.category === 'other'}
-            initial={{ title: b.title, shotOn: b.shot_on, status: b.status, storageUrl: b.storage_url ?? '', memo: b.memo ?? '', otherLabel: b.other_label ?? '' }} />
+            initial={{ title: b.title, shotOn: b.shot_on, status: b.status, storageUrl: b.storage_url ?? '', memo: b.memo ?? '', otherLabel: b.other_label ?? '', purpose: b.purpose ?? '' }} />
         </div>
       ) : null}
 

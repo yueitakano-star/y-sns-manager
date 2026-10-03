@@ -63,3 +63,11 @@ export const QUESTION_COUNT = 60;
 export function setLabel(setNumber: number, title: string): string {
   return `SET ${String(setNumber).padStart(2, '0')}｜${title}`;
 }
+
+export type Purpose = 'sns' | 'ad' | 'other';
+export const PURPOSES: { key: Purpose; name: string }[] = [
+  { key: 'sns', name: 'SNS' },
+  { key: 'ad', name: '広告' },
+  { key: 'other', name: 'その他' },
+];
+export const PURPOSE_LABEL: Record<Purpose, string> = { sns: 'SNS', ad: '広告', other: 'その他' };

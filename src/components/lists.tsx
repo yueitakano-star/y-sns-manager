@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { BatchListRow, PickerItem } from '@/lib/domain/materials';
 import type { PostRow } from '@/lib/domain/posts';
-import { CATEGORY_BY_KEY, MEDIA_LABEL, PLATFORM_LABEL, POST_CATEGORY_LABEL, UNIT } from '@/lib/constants';
+import { CATEGORY_BY_KEY, MEDIA_LABEL, PLATFORM_LABEL, POST_CATEGORY_LABEL, PURPOSE_LABEL, UNIT } from '@/lib/constants';
 import { formatJaDateTime, jstDate } from '@/lib/jst';
 import { Badge, MaterialStatusBadge, PostStatusBadge } from './ui';
 
@@ -20,6 +20,7 @@ export function BatchList({ rows, base }: { rows: BatchListRow[]; base: string }
               <span className="badge border-mat-100 bg-mat-50 text-mat-700">▣ 素材</span>
               <span className="font-mono text-xs text-slate-500">{b.display_code}</span>
               <MaterialStatusBadge status={b.status} />
+              {b.purpose ? <Badge tone="blue">{PURPOSE_LABEL[b.purpose]}</Badge> : null}
               {b.used_count > 0 ? <Badge tone="post">投稿に使用 {b.used_count}/{b.item_count}</Badge> : <Badge>未使用</Badge>}
             </div>
             <div className="mt-1 font-bold">{b.title}</div>
