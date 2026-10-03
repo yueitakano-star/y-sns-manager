@@ -26,7 +26,8 @@ export const currentUser = cache(async (): Promise<SessionUser | null> => {
   const u = await getSessionUser(db, token);
   if (u) return u;
   // 一時的なログイン省略（ローカル組み込みDB専用）。共有DB(DATABASE_URL)では無効
-  if (process.env.DEV_NO_AUTH === 'true' && !process.env.DATABASE_URL) {
+  // NO_AUTH=true は共有DBでも有効（URLを知っていれば誰でも操作できるので一時利用のみ）
+  if (process.env.NO_AUTH === 'true' || (process.env.DEV_NO_AUTH === 'true' && !process.env.DATABASE_URL)) {
     const email = 'local-dev@example.local';
     let rows = await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email]);
     if (!rows[0]) {
