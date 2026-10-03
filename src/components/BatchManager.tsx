@@ -14,7 +14,9 @@ import {
   voidItemsAction,
 } from '@/app/actions';
 import { ANSWER_LABEL, MATERIAL_STATES, type AnswerStatus, type MaterialStatus } from '@/lib/constants';
+import { removeFileAction } from '@/app/actions';
 import { ErrorBanner, Field, SuccessBanner, toNum, useSubmitter } from './forms';
+import { uploadOne } from './uploader';
 
 export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string }; today: string; showOtherLabel: boolean }) {
   const router = useRouter();
@@ -74,9 +76,10 @@ export interface ItemView {
   scheduled_count: number;
   cast_names: string[];
   derived_from_code: string | null;
+  files: { id: string; file_name: string; content_type: string; size_bytes: number; url: string | null }[];
 }
 
-function ItemRow({ storeKey, item, selected, onToggle }: { storeKey: string; item: ItemView; selected: boolean; onToggle: () => void }) {
+function ItemRow({ storeKey, item, selected, onToggle, canUpload }: { storeKey: string; item: ItemView; selected: boolean; onToggle: () => void; canUpload: boolean }) {
   const router = useRouter();
   const [status, setStatus] = useState(item.status);
   const [memo, setMemo] = useState(item.memo);
@@ -106,11 +109,12 @@ function ItemRow({ storeKey, item, selected, onToggle }: { storeKey: string; ite
         {saved ? <span role="status" className="text-sm text-emerald-700">保存しました</span> : null}
       </div>
       {error ? <p role="alert" className="mt-1 text-sm text-red-700">{error}{fields.status ? ` ${fields.status}` : ''}</p> : null}
+      <FileList storeKey={storeKey} item={item} canUpload={canUpload} />
     </li>
   );
 }
 
-export function ItemsManager({ storeKey, base, batchId, items, castOptions, editable }: { storeKey: string; base: string; batchId: string; items: ItemView[]; castOptions: { id: string; name: string }[]; editable: boolean }) {
+export function ItemsManager({ storeKey, base, batchId, items, castOptions, editable, storageReady }: { storeKey: string; base: string; batchId: string; items: ItemView[]; castOptions: { id: string; name: string }[]; editable: boolean; storageReady: boolean }) {
   const router = useRouter();
   const [sel, setSel] = useState<string[]>([]);
   const [reason, setReason] = useState('');
@@ -126,8 +130,9 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
 
   return (
     <div>
+      {editable ? <BulkUpload storeKey={storeKey} items={items} storageReady={storageReady} /> : null}
       <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white" data-testid="items">
-        {items.map((it) => (<ItemRow key={it.id} storeKey={storeKey} item={it} selected={sel.includes(it.id)} onToggle={() => toggle(it.id)} />))}
+        {items.map((it) => (<ItemRow key={it.id} storeKey={storeKey} item={it} selected={sel.includes(it.id)} onToggle={() => toggle(it.id)} canUpload={editable && storageReady} />))}
       </ul>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button type="button" className="btn-sub" onClick={() => setSel(sel.length === items.length ? [] : items.map((i) => i.id))}>{sel.length === items.length ? '選択を解除' : 'すべて選択'}</button>
@@ -274,6 +279,89 @@ export function VoidBatchButton({ storeKey, batchId, base }: { storeKey: string;
         }}>{busy ? '取消中…' : '取り消す'}</button>
         <button type="button" className="btn-sub" disabled={busy} onClick={() => setOpen(false)}>キャンセル</button>
       </div>
+    </div>
+  );
+}
+
+const fmtSize = (n: number) => (n >= 1048576 ? `${(n / 1048576).toFixed(1)}MB` : `${Math.max(1, Math.round(n / 1024))}KB`);
+
+function FileList({ storeKey, item, canUpload }: { storeKey: string; item: ItemView; canUpload: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const rm = useSubmitter();
+  if (!item.files.length && !canUpload) return null;
+  return (
+    <div className="mt-2 space-y-1" data-testid={`files-${item.code}`}>
+      {item.files.length ? (
+        <ul className="flex flex-wrap gap-2">
+          {item.files.map((f) => (
+            <li key={f.id} className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-xs">
+              {f.url && f.content_type.startsWith('image/') ? (
+                <a href={f.url} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.url} alt={f.file_name} className="mb-1 h-20 w-20 rounded object-cover" loading="lazy" />
+                </a>
+              ) : null}
+              {f.url ? <a className="block max-w-40 truncate underline" href={f.url} target="_blank" rel="noopener noreferrer">{f.file_name}</a> : <span>{f.file_name}</span>}
+              <span className="text-slate-500">{fmtSize(f.size_bytes)}</span>
+              {canUpload ? (
+                <button type="button" className="ml-2 text-red-700 underline" disabled={rm.busy} onClick={() => { if (window.confirm('このファイルを一覧から外します。よろしいですか？')) void rm.submit(() => removeFileAction(storeKey, f.id), () => router.refresh()); }}>外す</button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {canUpload ? (
+        <label className="btn-sub !min-h-9 cursor-pointer text-sm">
+          {busy ? 'アップロード中…' : '＋ ファイルを追加'}
+          <input type="file" accept="image/*,video/*" multiple className="sr-only" disabled={busy}
+            onChange={async (e) => {
+              const files = Array.from(e.target.files ?? []);
+              e.target.value = '';
+              if (!files.length) return;
+              setBusy(true); setErr(null);
+              for (const f of files) { const m = await uploadOne(storeKey, item.id, f); if (m) { setErr(m); break; } }
+              setBusy(false); router.refresh();
+            }} />
+        </label>
+      ) : null}
+      {err ? <p role="alert" className="text-sm text-red-700">{err}</p> : null}
+      <ErrorBanner message={rm.error} />
+    </div>
+  );
+}
+
+/** まとめてアップロード: 選んだファイルを、ファイル未登録の個別素材へ番号順に割り当てる */
+function BulkUpload({ storeKey, items, storageReady }: { storeKey: string; items: ItemView[]; storageReady: boolean }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const free = items.filter((i) => i.files.length === 0);
+  if (!storageReady) return <p className="mb-2 text-xs text-slate-500">ファイルのアップロードは、保存先（Supabase Storage）の設定後に使えます。保存場所URLの記録は今でも使えます。</p>;
+  return (
+    <div className="mb-3 rounded-xl border border-mat-100 bg-mat-50/40 p-3">
+      <label className="btn-mat cursor-pointer">
+        {busy ? 'アップロード中…' : 'ファイルをまとめてアップロード'}
+        <input type="file" accept="image/*,video/*" multiple className="sr-only" disabled={busy} data-testid="bulk-upload"
+          onChange={async (e) => {
+            const files = Array.from(e.target.files ?? []).sort((a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true }));
+            e.target.value = '';
+            if (!files.length) return;
+            if (files.length > free.length) { setErr(`ファイル${files.length}件に対して、ファイルのない個別素材が${free.length}点しかありません。先に「個別素材を追加」してください。`); return; }
+            setBusy(true); setErr(null); setLog([]);
+            for (let i = 0; i < files.length; i++) {
+              const m = await uploadOne(storeKey, free[i].id, files[i]);
+              if (m) { setErr(m); break; }
+              setLog((p) => [...p, `${free[i].code} ← ${files[i].name}`]);
+            }
+            setBusy(false); router.refresh();
+          }} />
+      </label>
+      <p className="mt-1 text-xs text-slate-600">選んだファイルを名前順に、ファイルのない個別素材（{free.length}点）へ割り当てます。個別に追加する場合は各素材の「＋ ファイルを追加」から。</p>
+      {log.length ? <ul className="mt-1 text-xs text-emerald-800">{log.map((l) => <li key={l}>✓ {l}</li>)}</ul> : null}
+      {err ? <p role="alert" className="mt-1 text-sm text-red-700">{err}</p> : null}
     </div>
   );
 }

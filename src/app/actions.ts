@@ -21,6 +21,8 @@ import {
 } from '@/lib/domain/materials';
 import { createPosts, updatePost, voidPost } from '@/lib/domain/posts';
 import type { Role } from '@/lib/constants';
+import { supabaseStorage } from '@/lib/storage';
+import { prepareUpload, registerFile, removeFile } from '@/lib/domain/files';
 
 export type ActionResult<T = void> =
   | { ok: true; data: T }
@@ -220,5 +222,27 @@ export async function setUserActiveAction(userId: string, active: boolean) {
     const db = await getDb();
     await db.query('UPDATE users SET is_active=$2, updated_at=now() WHERE id=$1', [userId, active]);
     if (!active) await db.query('DELETE FROM sessions WHERE user_id=$1', [userId]);
+  });
+}
+
+// ---------- ファイルアップロード ----------
+export async function prepareUploadAction(storeKey: string, itemId: string, file: { name: string; type: string; size: number }) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return prepareUpload(db, supabaseStorage, user, store.id, itemId, file);
+  });
+}
+
+export async function registerFileAction(storeKey: string, itemId: string, input: { name: string; type: string; size: number; path: string }) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return registerFile(db, user, store.id, itemId, input);
+  });
+}
+
+export async function removeFileAction(storeKey: string, fileId: string) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    await removeFile(db, supabaseStorage, user, store.id, fileId);
   });
 }

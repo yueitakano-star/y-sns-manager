@@ -10,6 +10,8 @@ import { Badge, LinkBtn, MaterialStatusBadge, PageHeader, PostStatusBadge, Secti
 import { categoryName } from '@/components/lists';
 import { AnswerEditor, BatchEditForm, ItemsManager, VoidBatchButton } from '@/components/BatchManager';
 import type { PostStatus } from '@/lib/constants';
+import { listFiles } from '@/lib/domain/files';
+import { supabaseStorage } from '@/lib/storage';
 
 export default async function MaterialDetail({ params, searchParams }: { params: Promise<{ store: string; id: string }>; searchParams: Promise<SP> }) {
   const { id } = await params;
@@ -22,6 +24,10 @@ export default async function MaterialDetail({ params, searchParams }: { params:
   const casts = await listCasts(db, user, store.id, { activeOnly: true });
   const codeById = new Map(b.items.concat(b.voidedItems).map((i) => [i.id, i.code]));
   const today = jstToday();
+  const fileRows = await listFiles(db, user, store.id, b.items.map((i) => i.id));
+  const urls = await Promise.all(fileRows.map((f) => (supabaseStorage.configured() ? supabaseStorage.createDownloadUrl(f.storage_path) : Promise.resolve(null))));
+  const filesByItem = new Map<string, { id: string; file_name: string; content_type: string; size_bytes: number; url: string | null }[]>();
+  fileRows.forEach((f, i) => filesByItem.set(f.item_id, [...(filesByItem.get(f.item_id) ?? []), { id: f.id, file_name: f.file_name, content_type: f.content_type, size_bytes: Number(f.size_bytes), url: urls[i] }]));
   const castNames = [...new Set(b.items.flatMap((i) => i.cast_names))];
 
   return (
@@ -71,8 +77,9 @@ export default async function MaterialDetail({ params, searchParams }: { params:
         base={base}
         batchId={b.id}
         editable={editable}
+        storageReady={supabaseStorage.configured()}
         castOptions={casts.map((c) => ({ id: c.id, name: c.display_name }))}
-        items={b.items.map((i) => ({ id: i.id, code: i.code, status: i.status, memo: i.memo ?? '', published_count: i.published_count, scheduled_count: i.scheduled_count, cast_names: i.cast_names, derived_from_code: i.derived_from_item_id ? (codeById.get(i.derived_from_item_id) ?? null) : null }))}
+        items={b.items.map((i) => ({ id: i.id, code: i.code, status: i.status, memo: i.memo ?? '', published_count: i.published_count, scheduled_count: i.scheduled_count, cast_names: i.cast_names, files: filesByItem.get(i.id) ?? [], derived_from_code: i.derived_from_item_id ? (codeById.get(i.derived_from_item_id) ?? null) : null }))}
       />
       {b.voidedItems.length ? (
         <p className="mt-2 text-xs text-slate-500">取消済みの個別素材（集計から除外・番号は再利用しません）: {b.voidedItems.map((i) => i.code).join('、')}</p>
