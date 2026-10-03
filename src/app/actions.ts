@@ -12,6 +12,7 @@ import {
   createDerivedItem,
   createInterviewShoot,
   createMaterial,
+  createQuickUpload,
   markAllAnswered,
   setAnswer,
   updateBatch,
@@ -244,5 +245,12 @@ export async function removeFileAction(storeKey: string, fileId: string) {
   return run(async () => {
     const { db, user, store } = await ctx(storeKey);
     await removeFile(db, supabaseStorage, user, store.id, fileId);
+  });
+}
+
+export async function quickUploadAction(storeKey: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return createQuickUpload(db, user, store.id, input);
   });
 }

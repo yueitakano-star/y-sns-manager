@@ -664,3 +664,48 @@ export async function listPickerItems(q: Queryable, actor: Actor, storeId: strin
     [storeId],
   );
 }
+
+const quickSchema = z.object({
+  requestKey,
+  castId: idStr('キャスト').nullish(),
+  memo: optStr('備考', 2000),
+  images: z.number().int().min(0).max(MAX_QTY).default(0),
+  videos: z.number().int().min(0).max(MAX_QTY).default(0),
+});
+
+/** かんたん投稿: 名前(キャスト)・備考・ファイル数だけで素材を自動登録する（種類は「その他：かんたんアップロード」）。ファイル本体は呼び出し側がアップロードする */
+export async function createQuickUpload(
+  db: Db,
+  actor: Actor,
+  storeId: string,
+  input: unknown,
+): Promise<{ batches: { batchId: string; kind: MediaKind; itemIds: string[] }[] }> {
+  await requireRole(db, actor, storeId, 'editor');
+  const v = parseInput(quickSchema, input);
+  if (v.images + v.videos === 0) throw validation('ファイルを選んでください。', { files: 'ファイルを選んでください。' });
+  let who = '店舗共通';
+  if (v.castId) {
+    const c = await db.query<{ display_name: string }>('SELECT display_name FROM casts WHERE id=$1 AND store_id=$2 AND deleted_at IS NULL', [v.castId, storeId]);
+    if (!c[0]) throw validation('この店舗に登録されていないキャストです。', { castId: 'キャストを選び直してください。' });
+    who = c[0].display_name;
+  }
+  const today = jstToday();
+  const batches: { batchId: string; kind: MediaKind; itemIds: string[] }[] = [];
+  for (const [kind, n] of [['image', v.images], ['video', v.videos]] as const) {
+    if (!n) continue;
+    const r = await createMaterial(db, actor, storeId, {
+      requestKey: v.requestKey ? `${v.requestKey}:${kind}` : null,
+      category: 'other',
+      otherLabel: 'かんたんアップロード',
+      mediaKind: kind,
+      quantity: n,
+      castIds: v.castId ? [v.castId] : [],
+      shotOn: today,
+      title: `${who} ${today} かんたん${kind === 'image' ? '画像' : '動画'}`,
+      status: 'captured',
+      memo: v.memo,
+    });
+    batches.push({ batchId: r.batchId, kind, itemIds: r.itemIds });
+  }
+  return { batches };
+}

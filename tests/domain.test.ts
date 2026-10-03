@@ -6,6 +6,7 @@ import {
   createDerivedItem,
   createInterviewShoot,
   createMaterial,
+  createQuickUpload,
   getBatchDetail,
   listBatches,
   markAllAnswered,
@@ -490,5 +491,26 @@ describe('期間フィルター', () => {
     expect((await storeStats(env.db, env.admin, B, month)).used).toBe(2);
     const custom = parsePeriod({ period: 'custom', from: '2020-01-01', to: '2020-01-31' });
     expect((await storeStats(env.db, env.admin, B, custom)).posts.published).toBe(1);
+  });
+});
+
+describe('かんたん投稿', () => {
+  it('名前・備考・ファイル数だけで素材が自動登録され、画像と動画は別グループ。連打は1回分', async () => {
+    const a = await cast('Aさん');
+    const key = 'quick-key-12345678';
+    const r = await createQuickUpload(env.db, env.editorB, B, { requestKey: key, castId: a.id, memo: '9月分', images: 3, videos: 1 });
+    expect(r.batches.map((b) => [b.kind, b.itemIds.length])).toEqual([['image', 3], ['video', 1]]);
+    await createQuickUpload(env.db, env.editorB, B, { requestKey: key, castId: a.id, memo: '9月分', images: 3, videos: 1 });
+    expect(await stat(a.id)).toMatchObject({ images: 3, videos: 1, total_items: 4 });
+    const d = await getBatchDetail(env.db, env.admin, B, r.batches[0].batchId);
+    expect(d.memo).toBe('9月分');
+  });
+  it('キャストなし(店舗共通)でも登録でき、ファイル0件・他店舗キャスト・閲覧専用は拒否', async () => {
+    const k = await cast('Kの子', K);
+    await createQuickUpload(env.db, env.editorB, B, { images: 2 });
+    expect((await storeStats(env.db, env.admin, B, ALL)).common.items).toBe(2);
+    await rejects(createQuickUpload(env.db, env.editorB, B, { images: 0, videos: 0 }), 'validation');
+    await rejects(createQuickUpload(env.db, env.editorB, B, { castId: k.id, images: 1 }), 'validation');
+    await rejects(createQuickUpload(env.db, env.viewerB, B, { images: 1 }), 'forbidden');
   });
 });

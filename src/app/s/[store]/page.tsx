@@ -5,6 +5,8 @@ import { CATEGORY_BY_KEY, PLATFORM_LABEL, QUESTION_COUNT, SET_COUNT, type Catego
 import { parsePeriod, periodLabel } from '@/lib/jst';
 import { PageHeader, SectionTitle, Stat, LinkBtn, fmtNum } from '@/components/ui';
 import { PeriodFilter } from '@/components/PeriodFilter';
+import { QuickUpload } from '@/components/QuickUpload';
+import { supabaseStorage } from '@/lib/storage';
 import { CastStatsList, applyCastParams } from '@/components/CastStatsList';
 
 export default async function Dashboard({ params, searchParams }: { params: Promise<{ store: string }>; searchParams: Promise<SP> }) {
@@ -28,6 +30,8 @@ export default async function Dashboard({ params, searchParams }: { params: Prom
           ) : null
         }
       />
+
+      {editable ? <QuickUpload storeKey={store.key} base={base} casts={activeCasts.map((c) => ({ id: c.id, name: c.display_name }))} storageReady={supabaseStorage.configured()} /> : null}
 
       {casts.length === 0 ? (
         <div className="card mb-4 border-amber-300 bg-amber-50 text-sm">
