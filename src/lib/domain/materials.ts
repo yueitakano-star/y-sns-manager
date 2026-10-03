@@ -538,7 +538,7 @@ export async function listBatches(q: Queryable, actor: Actor, storeId: string, f
   }
   if (f.purpose && ['sns', 'ad', 'other'].includes(f.purpose)) {
     params.push(f.purpose);
-    where.push(`b.purpose = ${params.length}`);
+    where.push(`b.purpose = $${params.length}`);
   }
   if (f.castId && /^[0-9a-f-]{36}$/i.test(f.castId)) {
     params.push(f.castId);
