@@ -1,0 +1,732 @@
+{
+  "schema_version": 1,
+  "app_name": "遊栄 SNS素材・投稿管理",
+  "locale": "ja-JP",
+  "timezone": "Asia/Tokyo",
+  "stores": [
+    {
+      "key": "b-club",
+      "name": "B-club",
+      "code": "BCL",
+      "sort_order": 1
+    },
+    {
+      "key": "kingyo",
+      "name": "KINGYO",
+      "code": "KYG",
+      "sort_order": 2
+    },
+    {
+      "key": "c-girl",
+      "name": "C-girl",
+      "code": "CGL",
+      "sort_order": 3
+    }
+  ],
+  "material_categories": [
+    {
+      "key": "interview",
+      "name": "インタビュー撮影",
+      "code": "INT",
+      "allowed_media_kinds": [
+        "video"
+      ],
+      "default_post_category": "interview",
+      "requires_question_set": true
+    },
+    {
+      "key": "self_pr_image",
+      "name": "セルフPR画像",
+      "code": "PR",
+      "allowed_media_kinds": [
+        "image"
+      ],
+      "default_post_category": "self_pr",
+      "requires_question_set": false
+    },
+    {
+      "key": "self_pr_video",
+      "name": "セルフPR動画",
+      "code": "PRV",
+      "allowed_media_kinds": [
+        "video"
+      ],
+      "default_post_category": "self_pr",
+      "requires_question_set": false
+    },
+    {
+      "key": "brand_video",
+      "name": "ブランドイメージ映像",
+      "code": "BRD",
+      "allowed_media_kinds": [
+        "video"
+      ],
+      "default_post_category": "brand_video",
+      "requires_question_set": false
+    },
+    {
+      "key": "daily_photo",
+      "name": "日常投稿写真",
+      "code": "DAY",
+      "allowed_media_kinds": [
+        "image"
+      ],
+      "default_post_category": "daily_photo",
+      "requires_question_set": false
+    },
+    {
+      "key": "event_material",
+      "name": "イベント素材",
+      "code": "EVT",
+      "allowed_media_kinds": [
+        "image",
+        "video",
+        "other"
+      ],
+      "default_post_category": "other",
+      "requires_question_set": false
+    },
+    {
+      "key": "other",
+      "name": "その他",
+      "code": "OTH",
+      "allowed_media_kinds": [
+        "image",
+        "video",
+        "other"
+      ],
+      "default_post_category": "other",
+      "requires_question_set": false
+    }
+  ],
+  "media_kinds": [
+    {
+      "key": "image",
+      "unit": "枚"
+    },
+    {
+      "key": "video",
+      "unit": "本"
+    },
+    {
+      "key": "other",
+      "unit": "点"
+    }
+  ],
+  "material_states": [
+    {
+      "key": "captured",
+      "name": "撮影・作成済み"
+    },
+    {
+      "key": "editing",
+      "name": "編集中"
+    },
+    {
+      "key": "ready",
+      "name": "投稿可能"
+    },
+    {
+      "key": "unusable",
+      "name": "NG・使用不可"
+    }
+  ],
+  "post_categories": [
+    {
+      "key": "interview",
+      "name": "インタビュー"
+    },
+    {
+      "key": "self_pr",
+      "name": "セルフPR"
+    },
+    {
+      "key": "brand_video",
+      "name": "ブランドイメージ映像"
+    },
+    {
+      "key": "daily_photo",
+      "name": "日常投稿写真"
+    },
+    {
+      "key": "other",
+      "name": "その他"
+    }
+  ],
+  "post_states": [
+    {
+      "key": "draft",
+      "name": "下書き"
+    },
+    {
+      "key": "scheduled",
+      "name": "投稿予定"
+    },
+    {
+      "key": "published",
+      "name": "投稿済み"
+    },
+    {
+      "key": "cancelled",
+      "name": "中止"
+    }
+  ],
+  "platforms": [
+    {
+      "key": "instagram",
+      "name": "Instagram"
+    },
+    {
+      "key": "tiktok",
+      "name": "TikTok"
+    },
+    {
+      "key": "other",
+      "name": "その他"
+    }
+  ],
+  "question_sets": [
+    {
+      "key": "interview-v1-set-01",
+      "set_number": 1,
+      "version": 1,
+      "title": "まずは、どんな子？",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-01-q1",
+          "position": 1,
+          "text": "自分の性格をひと言でいうと？"
+        },
+        {
+          "key": "interview-v1-set-01-q2",
+          "position": 2,
+          "text": "友達からは「何キャラ」って言われる？"
+        },
+        {
+          "key": "interview-v1-set-01-q3",
+          "position": 3,
+          "text": "これがあれば一瞬でご機嫌になる！って何？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-02",
+      "set_number": 2,
+      "version": 1,
+      "title": "見た目とのギャップ、あります",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-02-q1",
+          "position": 1,
+          "text": "見た目でよく誤解されることは？"
+        },
+        {
+          "key": "interview-v1-set-02-q2",
+          "position": 2,
+          "text": "実は得意な、意外なことは？"
+        },
+        {
+          "key": "interview-v1-set-02-q3",
+          "position": 3,
+          "text": "逆に、どうしても苦手なものは？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-03",
+      "set_number": 3,
+      "version": 1,
+      "title": "お休みの日、何してる？",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-03-q1",
+          "position": 1,
+          "text": "休日は、外に出たい派？ 家にいたい派？"
+        },
+        {
+          "key": "interview-v1-set-03-q2",
+          "position": 2,
+          "text": "ひとりの時間は、何をしていることが多い？"
+        },
+        {
+          "key": "interview-v1-set-03-q3",
+          "position": 3,
+          "text": "急に3連休になったら、何をしたい？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-04",
+      "set_number": 4,
+      "version": 1,
+      "title": "仕事終わりの素顔",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-04-q1",
+          "position": 1,
+          "text": "仕事終わりについ食べたくなるものは？"
+        },
+        {
+          "key": "interview-v1-set-04-q2",
+          "position": 2,
+          "text": "家に帰って、まず何をする？"
+        },
+        {
+          "key": "interview-v1-set-04-q3",
+          "position": 3,
+          "text": "寝る前、スマホでつい見ちゃうものは？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-05",
+      "set_number": 5,
+      "version": 1,
+      "title": "食の好みで性格が分かる？",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-05-q1",
+          "position": 1,
+          "text": "毎日食べても飽きないものは？"
+        },
+        {
+          "key": "interview-v1-set-05-q2",
+          "position": 2,
+          "text": "居酒屋に行くと、必ず頼むものは？"
+        },
+        {
+          "key": "interview-v1-set-05-q3",
+          "position": 3,
+          "text": "一生どちらかしか食べられないなら、焼肉？ お寿司？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-06",
+      "set_number": 6,
+      "version": 1,
+      "title": "バッグとお買い物事情",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-06-q1",
+          "position": 1,
+          "text": "バッグに入っていないと落ち着かないものは？"
+        },
+        {
+          "key": "interview-v1-set-06-q2",
+          "position": 2,
+          "text": "最近買って「大正解！」だったものは？"
+        },
+        {
+          "key": "interview-v1-set-06-q3",
+          "position": 3,
+          "text": "頑張った自分へのご褒美に、今ほしいものは？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-07",
+      "set_number": 7,
+      "version": 1,
+      "title": "小さい頃は、どんな子だった？",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-07-q1",
+          "position": 1,
+          "text": "子どもの頃は、おとなしい子？ やんちゃな子？"
+        },
+        {
+          "key": "interview-v1-set-07-q2",
+          "position": 2,
+          "text": "子どもの頃、何になりたかった？"
+        },
+        {
+          "key": "interview-v1-set-07-q3",
+          "position": 3,
+          "text": "昔から変わっていないところは？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-08",
+      "set_number": 8,
+      "version": 1,
+      "title": "ちょっと抜けてる一面",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-08-q1",
+          "position": 1,
+          "text": "最近の小さな「やらかし」をひとつ教えて？"
+        },
+        {
+          "key": "interview-v1-set-08-q2",
+          "position": 2,
+          "text": "よくなくしたり、探したりするものは？"
+        },
+        {
+          "key": "interview-v1-set-08-q3",
+          "position": 3,
+          "text": "自分の取扱説明書に、注意書きをひとつ書くなら？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-09",
+      "set_number": 9,
+      "version": 1,
+      "title": "気になる人の、ここを見てます",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-09-q1",
+          "position": 1,
+          "text": "初対面の相手の、どこに最初に目がいく？"
+        },
+        {
+          "key": "interview-v1-set-09-q2",
+          "position": 2,
+          "text": "見た目以外で「素敵だな」と思うポイントは？"
+        },
+        {
+          "key": "interview-v1-set-09-q3",
+          "position": 3,
+          "text": "「この人と、もっと話したい！」と思うのはどんなとき？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-10",
+      "set_number": 10,
+      "version": 1,
+      "title": "これをされると、うれしい！",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-10-q1",
+          "position": 1,
+          "text": "「かわいい」以外で、言われるとうれしい褒め言葉は？"
+        },
+        {
+          "key": "interview-v1-set-10-q2",
+          "position": 2,
+          "text": "思わずキュンとする、さりげない気遣いは？"
+        },
+        {
+          "key": "interview-v1-set-10-q3",
+          "position": 3,
+          "text": "落ち込んでいるとき、どうしてもらうとうれしい？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-11",
+      "set_number": 11,
+      "version": 1,
+      "title": "恋愛の好み、二択で回答！",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-11-q1",
+          "position": 1,
+          "text": "好きになったら、自分から行く派？ 待つ派？"
+        },
+        {
+          "key": "interview-v1-set-11-q2",
+          "position": 2,
+          "text": "恋人とは、毎日連絡したい派？ お互いのペースでいい派？"
+        },
+        {
+          "key": "interview-v1-set-11-q3",
+          "position": 3,
+          "text": "甘えたい派？ 甘えられたい派？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-12",
+      "set_number": 12,
+      "version": 1,
+      "title": "理想のデートを聞いてみた",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-12-q1",
+          "position": 1,
+          "text": "初デートで食べに行くなら、何がいい？"
+        },
+        {
+          "key": "interview-v1-set-12-q2",
+          "position": 2,
+          "text": "デートは、リードしたい派？ されたい派？"
+        },
+        {
+          "key": "interview-v1-set-12-q3",
+          "position": 3,
+          "text": "プレゼントは、サプライズ派？ 一緒に選びたい派？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-13",
+      "set_number": 13,
+      "version": 1,
+      "title": "LINEに出る、素の性格",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-13-q1",
+          "position": 1,
+          "text": "いちばんよく使う絵文字やスタンプは？"
+        },
+        {
+          "key": "interview-v1-set-13-q2",
+          "position": 2,
+          "text": "メッセージは、短文を何回も送る派？ まとめて送る派？"
+        },
+        {
+          "key": "interview-v1-set-13-q3",
+          "position": 3,
+          "text": "返信は、すぐ送る派？ 文章を考えてから送る派？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-14",
+      "set_number": 14,
+      "version": 1,
+      "title": "カラオケの好み、教えて！",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-14-q1",
+          "position": 1,
+          "text": "カラオケで「これなら任せて！」という曲は？"
+        },
+        {
+          "key": "interview-v1-set-14-q2",
+          "position": 2,
+          "text": "自分で歌うなら、しっとり系？ 盛り上がる系？"
+        },
+        {
+          "key": "interview-v1-set-14-q3",
+          "position": 3,
+          "text": "誰かに歌ってもらうとテンションが上がる曲は？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-15",
+      "set_number": 15,
+      "version": 1,
+      "title": "お店では、こんな接客です",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-15-q1",
+          "position": 1,
+          "text": "聞き上手と盛り上げ役、どっちタイプ？"
+        },
+        {
+          "key": "interview-v1-set-15-q2",
+          "position": 2,
+          "text": "初めてのお客様とは、どんな話から始める？"
+        },
+        {
+          "key": "interview-v1-set-15-q3",
+          "position": 3,
+          "text": "接客でいちばん大切にしていることは？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-16",
+      "set_number": 16,
+      "version": 1,
+      "title": "出勤前のこだわり",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-16-q1",
+          "position": 1,
+          "text": "今日の衣装やヘアメイクの、お気に入りポイントは？"
+        },
+        {
+          "key": "interview-v1-set-16-q2",
+          "position": 2,
+          "text": "出勤前に、必ずすることは？"
+        },
+        {
+          "key": "interview-v1-set-16-q3",
+          "position": 3,
+          "text": "気合いを入れたいときに聴く曲は？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-17",
+      "set_number": 17,
+      "version": 1,
+      "title": "うちのお店、ここが好き！",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-17-q1",
+          "position": 1,
+          "text": "お店の好きなところをひとつ挙げるなら？"
+        },
+        {
+          "key": "interview-v1-set-17-q2",
+          "position": 2,
+          "text": "一緒に働く女の子の、見習いたいところは？"
+        },
+        {
+          "key": "interview-v1-set-17-q3",
+          "position": 3,
+          "text": "キャバクラに初めて来る人に、ひと言伝えるなら？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-18",
+      "set_number": 18,
+      "version": 1,
+      "title": "迷うけど選んで！ ご褒美二択",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-18-q1",
+          "position": 1,
+          "text": "一生無料になるなら、洋服？ 外食？"
+        },
+        {
+          "key": "interview-v1-set-18-q2",
+          "position": 2,
+          "text": "今もらえるなら、おいしいごはん？ たっぷりの睡眠？"
+        },
+        {
+          "key": "interview-v1-set-18-q3",
+          "position": 3,
+          "text": "ご褒美旅行に行くなら、のんびり温泉？ にぎやかな都会？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-19",
+      "set_number": 19,
+      "version": 1,
+      "title": "もしも、一日だけできるなら？",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-19-q1",
+          "position": 1,
+          "text": "一日だけ超能力が使えるなら、何がいい？"
+        },
+        {
+          "key": "interview-v1-set-19-q2",
+          "position": 2,
+          "text": "一日だけ別の仕事を体験するなら、何をしたい？"
+        },
+        {
+          "key": "interview-v1-set-19-q3",
+          "position": 3,
+          "text": "一日だけお店の店長になったら、何をしてみたい？"
+        }
+      ]
+    },
+    {
+      "key": "interview-v1-set-20",
+      "set_number": 20,
+      "version": 1,
+      "title": "私のこと、覚えて帰って！",
+      "target_duration_seconds": {
+        "min": 30,
+        "max": 60
+      },
+      "questions": [
+        {
+          "key": "interview-v1-set-20-q1",
+          "position": 1,
+          "text": "自分にキャッチコピーをつけるなら？"
+        },
+        {
+          "key": "interview-v1-set-20-q2",
+          "position": 2,
+          "text": "「この話題なら任せて！」という得意ジャンルは？"
+        },
+        {
+          "key": "interview-v1-set-20-q3",
+          "position": 3,
+          "text": "動画を見てくれた人に、最後にひと言伝えるなら？"
+        }
+      ]
+    }
+  ],
+  "casts": [],
+  "warning": "これは初期マスターのみ。実在キャスト、撮影実績、投稿実績、アカウント情報は含まない。安定したkeyで冪等に投入し、実データは削除しない。"
+}

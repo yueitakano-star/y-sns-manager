@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo UI", "Noto Sans JP", system-ui, sans-serif;
+  /* 素材 = ティール系 / 投稿 = インディゴ系 で見出し・バッジを区別する */
+  --color-mat-50: #effaf8;
+  --color-mat-100: #d3f3ee;
+  --color-mat-600: #0f766e;
+  --color-mat-700: #115e59;
+  --color-post-50: #f1f2ff;
+  --color-post-100: #e0e3ff;
+  --color-post-600: #4338ca;
+  --color-post-700: #3730a3;
+}
+
+:root {
+  --bg: #f6f7f9;
+  --ink: #1f2933;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+@utility btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border px-4 py-2 text-base font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@layer components {
+  .btn-primary {
+    @apply btn border-slate-800 bg-slate-800 text-white hover:bg-slate-700;
+  }
+  .btn-mat {
+    @apply btn border-mat-600 bg-mat-600 text-white hover:bg-mat-700;
+  }
+  .btn-post {
+    @apply btn border-post-600 bg-post-600 text-white hover:bg-post-700;
+  }
+  .btn-sub {
+    @apply btn border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply btn border-red-300 bg-white text-red-700 hover:bg-red-50;
+  }
+  .input {
+    @apply min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 placeholder:text-slate-400 focus:border-slate-600 focus:outline-2 focus:outline-offset-1 focus:outline-slate-400;
+  }
+  .input-error {
+    @apply border-red-500 bg-red-50;
+  }
+  .label {
+    @apply mb-1 block text-sm font-semibold text-slate-700;
+  }
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white p-4 shadow-sm;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap;
+  }
+  .th {
+    @apply px-2 py-2 text-left text-xs font-semibold whitespace-nowrap text-slate-600;
+  }
+  .td {
+    @apply px-2 py-2 text-sm;
+  }
+}
