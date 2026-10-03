@@ -8,7 +8,7 @@ import type { StorageApi } from '../storage';
 import { idStr, parseInput } from './util';
 
 export const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'video/mp4', 'video/quicktime', 'video/webm'];
-export const maxUploadBytes = () => (Number(process.env.MAX_UPLOAD_MB) || 50) * 1024 * 1024;
+export const maxUploadBytes = () => (Number(process.env.MAX_UPLOAD_MB) || 2048) * 1024 * 1024;
 
 const fileMeta = z.object({
   name: z.string().trim().min(1, 'ファイル名がありません。').max(200),

@@ -272,7 +272,7 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
         <fieldset className="card space-y-2">
           <legend className="px-1 text-sm font-bold text-mat-700">ファイル（任意）</legend>
           <input type="file" accept="image/*,video/*" multiple data-testid="material-files" className="input" onChange={(e) => setFiles(Array.from(e.target.files ?? []).sort((a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true })))} />
-          <p className="text-xs text-slate-500">選んだファイルは名前順に、登録される個別素材（番号順）へ割り当てて保存します。数量以下の枚数にしてください。1ファイル50MBまで。後から素材詳細でも追加できます。</p>
+          <p className="text-xs text-slate-500">選んだファイルは名前順に、登録される個別素材（番号順）へ割り当てて保存します。数量以下の枚数にしてください。1ファイル2GBまで。後から素材詳細でも追加できます。</p>
           {files.length ? <p className="text-sm">{files.length}件を選択中</p> : null}
           {fields.files ? <p role="alert" className="text-sm font-medium text-red-700">{fields.files}</p> : null}
         </fieldset>

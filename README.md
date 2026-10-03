@@ -65,5 +65,5 @@ npm run build && npm run test:e2e   # 実ブラウザ(Edge)のUIテスト 23件�
 
 - 非公開バケット `materials` に、ブラウザから直接アップロードします（署名付きURL・サーバーを経由しないので大きな動画もOK）。閲覧は認証後の期限付きURL(1時間)です。
 - 有効にするには環境変数 `SUPABASE_URL` と `SUPABASE_SERVICE_ROLE_KEY`（Project Settings → API の service_role）を設定します。キーはサーバー専用で、Gitやブラウザに出さないでください。
-- 1ファイルの上限はバケット設定(既定50MB。無料プランの上限)と `MAX_UPLOAD_MB` の小さい方です。対応形式: JPEG/PNG/WebP/GIF/HEIC、MP4/MOV/WebM。
+- 1ファイルの上限はバケット設定(既定2GB。Supabase Proで、Storage設定のグローバル上限も要確認)と `MAX_UPLOAD_MB` の小さい方です。対応形式: JPEG/PNG/WebP/GIF/HEIC、MP4/MOV/WebM。
 - 素材詳細で、個別素材ごとの「＋ ファイルを追加」と、名前順に空き素材へ割り当てる「まとめてアップロード」が使えます。
