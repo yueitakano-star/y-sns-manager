@@ -106,7 +106,11 @@ async function createPg(url: string): Promise<Db> {
 
 export async function createDb(opts: { url?: string; pgliteDir?: string } = {}): Promise<Db> {
   const url = opts.url ?? process.env.DATABASE_URL;
-  if (url) return createPg(url);
+  if (url) {
+    if (/\[YOUR-PASSWORD\]|YOUR_PASSWORD/.test(url)) throw new Error('DATABASE_URL のパスワード部分が置き換わっていません（[YOUR-PASSWORD] のままです）');
+    return createPg(url);
+  }
+  if (process.env.VERCEL) throw new Error('DATABASE_URL が未設定です（Vercel の環境変数に追加して再デプロイしてください）');
   return createPglite(opts.pgliteDir ?? process.env.PGLITE_DIR ?? './.data/pglite');
 }
 
