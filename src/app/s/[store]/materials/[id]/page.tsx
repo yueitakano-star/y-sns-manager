@@ -37,6 +37,11 @@ export default async function MaterialDetail({ params, searchParams }: { params:
           素材を登録しました（{b.items.length}{UNIT[b.media_kind]}の個別素材を作成）。投稿件数はまだ増えていません。
         </p>
       ) : null}
+      {one(sp.upload_failed) ? (
+        <p role="alert" className="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm font-semibold text-amber-900">
+          素材は登録しましたが、{one(sp.upload_failed)}件のファイルのアップロードに失敗しました。下の各個別素材の「＋ ファイルを追加」からやり直してください。
+        </p>
+      ) : null}
       <PageHeader
         kind="mat"
         title={b.title}

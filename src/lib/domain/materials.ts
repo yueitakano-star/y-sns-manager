@@ -146,6 +146,8 @@ export interface CreatedBatch {
   batchId: string;
   displayCode: string;
   itemCount: number;
+  /** 個別素材のID（番号順）。登録直後のファイルアップロードに使う */
+  itemIds: string[];
   duplicate: boolean;
 }
 
@@ -158,7 +160,8 @@ async function findByRequestKey(q: Queryable, storeId: string, key: string | nul
   );
   if (!rows[0]) return null;
   if (rows[0].store_id !== storeId) throw validation('不正なリクエストです。');
-  return { batchId: rows[0].id, displayCode: rows[0].display_code, itemCount: rows[0].n, duplicate: true };
+  const ids = await q.query<{ id: string }>('SELECT id FROM material_items WHERE batch_id = $1 AND voided_at IS NULL ORDER BY seq', [rows[0].id]);
+  return { batchId: rows[0].id, displayCode: rows[0].display_code, itemCount: rows[0].n, itemIds: ids.map((r) => r.id), duplicate: true };
 }
 
 /** インタビュー以外の素材を、数量ぶんの個別素材としてまとめて登録する（素材グループ1件＋個別素材N件を1トランザクション） */
@@ -189,8 +192,8 @@ export async function createMaterial(db: Db, actor: Actor, storeId: string, inpu
       memo: v.memo,
       requestKey: v.requestKey ?? null,
     });
-    await insertItems(q, { storeId, batchId: b.id, displayCode: b.displayCode, from: 1, count: v.quantity, mediaKind: v.mediaKind, status: v.status, castIds });
-    return { batchId: b.id, displayCode: b.displayCode, itemCount: v.quantity, duplicate: false };
+    const created = await insertItems(q, { storeId, batchId: b.id, displayCode: b.displayCode, from: 1, count: v.quantity, mediaKind: v.mediaKind, status: v.status, castIds });
+    return { batchId: b.id, displayCode: b.displayCode, itemCount: v.quantity, itemIds: created, duplicate: false };
   });
 }
 
@@ -279,7 +282,7 @@ export async function createInterviewShoot(db: Db, actor: Actor, storeId: string
         );
       }
     }
-    return { batchId: b.id, displayCode: b.displayCode, itemCount: v.videoCount, duplicate: false, sessionId };
+    return { batchId: b.id, displayCode: b.displayCode, itemCount: v.videoCount, itemIds, duplicate: false, sessionId };
   });
 }
 

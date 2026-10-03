@@ -5,6 +5,7 @@ import { listQuestionSets } from '@/lib/domain/stats';
 import { jstToday } from '@/lib/jst';
 import { PageHeader } from '@/components/ui';
 import { MaterialForm } from '@/components/MaterialForm';
+import { supabaseStorage } from '@/lib/storage';
 
 export default async function NewMaterial({ params, searchParams }: { params: Promise<{ store: string }>; searchParams: Promise<SP> }) {
   const { db, user, store, base, editable } = await pageCtx(params);
@@ -22,6 +23,7 @@ export default async function NewMaterial({ params, searchParams }: { params: Pr
         today={jstToday()}
         defaultCastId={one(sp.cast)}
         defaultCategory={one(sp.category)}
+        storageReady={supabaseStorage.configured()}
       />
     </>
   );

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createInterviewAction, createMaterialAction } from '@/app/actions';
 import { CATEGORIES, CATEGORY_BY_KEY, MATERIAL_STATES, MEDIA_LABEL, UNIT, setLabel, type AnswerStatus, type CategoryKey, type MaterialStatus, type MediaKind } from '@/lib/constants';
 import { ErrorBanner, Field, newRequestKey, toNum, useSubmitter } from './forms';
+import { uploadOne } from './uploader';
 
 interface SetInfo {
   id: string;
@@ -18,7 +19,7 @@ interface CastOpt {
 }
 type Ans = { status: AnswerStatus; answeredOn: string };
 
-export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultCastId, defaultCategory }: { storeKey: string; storeName: string; casts: CastOpt[]; sets: SetInfo[]; today: string; defaultCastId?: string; defaultCategory?: string }) {
+export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultCastId, defaultCategory, storageReady }: { storeKey: string; storeName: string; casts: CastOpt[]; sets: SetInfo[]; today: string; defaultCastId?: string; defaultCategory?: string; storageReady: boolean }) {
   const router = useRouter();
   const { busy, error, fields, submit, setError, setFields } = useSubmitter();
   const [requestKey] = useState(newRequestKey);
@@ -36,6 +37,8 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
   const [setId, setSetId] = useState('');
   const [takeNo, setTakeNo] = useState('');
   const [answers, setAnswers] = useState<Record<string, Ans>>({});
+  const [files, setFiles] = useState<File[]>([]);
+  const [progress, setProgress] = useState<string | null>(null);
 
   const cat = CATEGORY_BY_KEY[category];
   const isInterview = category === 'interview';
@@ -64,11 +67,30 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
     return null;
   }, [isInterview, quantity, qtyNum, mediaKind]);
 
+  /** 登録した個別素材へ、選んだファイルを番号順にアップロードしてから素材詳細へ移動する */
+  async function finish(d: { batchId: string; itemIds: string[] }) {
+    let failed = 0;
+    for (let i = 0; i < files.length; i++) {
+      setProgress(`ファイルをアップロード中… ${i + 1}/${files.length}`);
+      const msg = await uploadOne(storeKey, d.itemIds[i], files[i]);
+      if (msg) failed++;
+    }
+    setProgress(null);
+    router.push(`/s/${storeKey}/materials/${d.batchId}?created=1${failed ? `&upload_failed=${failed}` : ''}`);
+    router.refresh();
+  }
+
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isInterview && castIds.length === 0 && !common) {
       setFields({ castIds: '出演キャストを選ぶか、「店舗共通（キャストなし）」を選んでください。' });
       setError('出演キャストを選択してください。');
+      return;
+    }
+    const count = isInterview ? (toNum(quantity) ?? 1) : typeof qtyNum === 'number' ? qtyNum : 0;
+    if (files.length > count) {
+      setFields({ files: `選んだファイル(${files.length}件)が、登録する数量(${count})より多いです。` });
+      setError('ファイルの数が数量を超えています。');
       return;
     }
     if (isInterview) {
@@ -82,13 +104,13 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
       );
       void submit(
         () => createInterviewAction(storeKey, { requestKey, shotOn, setId, castIds, takeNo: toNum(takeNo) ?? null, videoCount: toNum(quantity) ?? 1, title: title || null, status, storageUrl, memo, answers: list }),
-        (d) => { router.push(`/s/${storeKey}/materials/${d.batchId}?created=1`); router.refresh(); },
+        (d) => finish(d),
       );
       return;
     }
     void submit(
       () => createMaterialAction(storeKey, { requestKey, category, otherLabel, mediaKind, quantity: toNum(quantity), castIds: common ? [] : castIds, shotOn, title, status, storageUrl, memo }),
-      (d) => { router.push(`/s/${storeKey}/materials/${d.batchId}?created=1`); router.refresh(); },
+      (d) => finish(d),
     );
   }
 
@@ -246,9 +268,21 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
         </Field>
       </fieldset>
 
+      {storageReady ? (
+        <fieldset className="card space-y-2">
+          <legend className="px-1 text-sm font-bold text-mat-700">ファイル（任意）</legend>
+          <input type="file" accept="image/*,video/*" multiple data-testid="material-files" className="input" onChange={(e) => setFiles(Array.from(e.target.files ?? []).sort((a, b) => a.name.localeCompare(b.name, 'ja', { numeric: true })))} />
+          <p className="text-xs text-slate-500">選んだファイルは名前順に、登録される個別素材（番号順）へ割り当てて保存します。数量以下の枚数にしてください。1ファイル50MBまで。後から素材詳細でも追加できます。</p>
+          {files.length ? <p className="text-sm">{files.length}件を選択中</p> : null}
+          {fields.files ? <p role="alert" className="text-sm font-medium text-red-700">{fields.files}</p> : null}
+        </fieldset>
+      ) : (
+        <p className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600" data-testid="upload-unavailable">ファイルのアップロードは未設定です（環境変数 SUPABASE_URL と SUPABASE_SERVICE_ROLE_KEY を設定して再デプロイすると、ここにファイル選択が出ます）。保存場所URLの記録は今でも使えます。</p>
+      )}
       <ErrorBanner message={error} />
+      {progress ? <p role="status" className="rounded-lg border border-sky-300 bg-sky-50 p-2 text-sm">{progress}</p> : null}
       <div className="sticky bottom-16 z-10 -mx-1 flex gap-2 rounded-xl bg-white/90 p-2 backdrop-blur md:static md:bg-transparent md:p-0">
-        <button type="submit" className="btn-mat flex-1 sm:flex-none" disabled={busy} data-testid="submit-material">{busy ? '保存中…' : '素材を登録する'}</button>
+        <button type="submit" className="btn-mat flex-1 sm:flex-none" disabled={busy || !!progress} data-testid="submit-material">{busy || progress ? '保存中…' : '素材を登録する'}</button>
         <button type="button" className="btn-sub" onClick={() => router.back()} disabled={busy}>キャンセル</button>
       </div>
     </form>
