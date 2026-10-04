@@ -322,7 +322,10 @@ async function main() {
     console.log('\n[素材のグリッド/詳細リスト]');
     await t('素材一覧をグリッドと詳細リストで切り替えられる（グループ・個別素材とも）', async () => {
       await page.goto(`${BASE}/s/b-club/materials`);
-      assert((await page.getByTestId('batch-list').count()) === 1, '既定は詳細リスト');
+      await page.getByTestId('batch-grid').waitFor();
+      assert((await page.getByTestId('batch-list').count()) === 0, '既定はグリッド');
+      await page.getByTestId('layout-list').click();
+      await page.getByTestId('batch-list').waitFor();
       await page.getByTestId('layout-grid').click();
       await page.getByTestId('batch-grid').waitFor();
       assert((await page.getByTestId('batch-grid').locator('> li').count()) >= 2, 'グリッドにカードがない');

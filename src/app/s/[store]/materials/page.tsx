@@ -13,7 +13,7 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
   const { db, user, store, base, editable } = await pageCtx(params);
   const sp = await searchParams;
   const view = one(sp.view) === 'items' ? 'items' : 'batches';
-  const layout = one(sp.layout) === 'grid' ? 'grid' : 'list';
+  const layout = one(sp.layout) === 'list' ? 'list' : 'grid';
   const withParams = (over: Record<string, string>) => {
     const p = new URLSearchParams();
     for (const [k, v] of Object.entries(sp)) if (typeof v === 'string' && v) p.set(k, v);
