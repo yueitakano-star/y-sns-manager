@@ -6,7 +6,7 @@ import type { Period } from '../jst';
 
 /** 有効 = 取り消し(論理削除)されていない個別素材 / 投稿。使用済み = 有効な「投稿済み」投稿に紐付く素材（重複なし） */
 const VALID_ITEMS = `
-  SELECT i.id, i.media_kind, i.status, b.shot_on, b.category
+  SELECT i.id, i.media_kind, i.status, b.shot_on, b.category, b.purpose
     FROM material_items i JOIN material_batches b ON b.id = i.batch_id
    WHERE i.store_id = $1 AND i.voided_at IS NULL AND b.voided_at IS NULL`;
 const USED_ITEMS = `
@@ -139,6 +139,8 @@ export interface StoreStats {
   unusedReady: number;
   scheduledAssigned: number;
   byCategory: { category: string; images: number; videos: number; others: number; total: number }[];
+  /** 用途別（未設定は purpose=null）。used=投稿済みに使用、ready=未使用かつ投稿可能 */
+  byPurpose: { purpose: string | null; total: number; used: number; unused: number; ready: number }[];
   posts: { published: number; scheduled: number; draft: number; cancelled: number };
   publishedByPlatform: { platform: string; n: number }[];
   publishedUnlinked: number;
@@ -151,11 +153,11 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
   await requireRole(q, actor, storeId, 'viewer');
   const [from, to] = periodParams(period);
   const inPeriod = (col: string) => `($2::timestamptz IS NULL OR (${col} >= $2::timestamptz AND ${col} < $3::timestamptz))`;
-  const itemRows = await q.query<{ media_kind: string; category: string; is_used: boolean; is_sched: boolean; status: string; n: number }>(
+  const itemRows = await q.query<{ media_kind: string; category: string; purpose: string | null; is_used: boolean; is_sched: boolean; status: string; n: number }>(
     `WITH vi AS (${VALID_ITEMS}), used AS (${USED_ITEMS}), sched AS (${SCHED_ITEMS})
-     SELECT vi.media_kind, vi.category, (u.item_id IS NOT NULL) AS is_used, (s.item_id IS NOT NULL) AS is_sched, vi.status, count(*)::int AS n
+     SELECT vi.media_kind, vi.category, vi.purpose, (u.item_id IS NOT NULL) AS is_used, (s.item_id IS NOT NULL) AS is_sched, vi.status, count(*)::int AS n
        FROM vi LEFT JOIN used u ON u.item_id = vi.id LEFT JOIN sched s ON s.item_id = vi.id
-      GROUP BY 1,2,3,4,5`,
+      GROUP BY 1,2,3,4,5,6`,
     [storeId],
   );
   const items = { total: 0, images: 0, videos: 0, others: 0 };
@@ -163,6 +165,7 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
   let unusedReady = 0;
   let scheduledAssigned = 0;
   const cat = new Map<string, { category: string; images: number; videos: number; others: number; total: number }>();
+  const pur = new Map<string, { purpose: string | null; total: number; used: number; unused: number; ready: number }>();
   for (const r of itemRows) {
     items.total += r.n;
     const k = r.media_kind === 'image' ? 'images' : r.media_kind === 'video' ? 'videos' : 'others';
@@ -174,6 +177,15 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
     c[k] += r.n;
     c.total += r.n;
     cat.set(r.category, c);
+    const pk = r.purpose ?? '';
+    const pp = pur.get(pk) ?? { purpose: r.purpose, total: 0, used: 0, unused: 0, ready: 0 };
+    pp.total += r.n;
+    if (r.is_used) pp.used += r.n;
+    else {
+      pp.unused += r.n;
+      if (r.status === 'ready') pp.ready += r.n;
+    }
+    pur.set(pk, pp);
   }
   const postRows = await q.query<{ status: string; platform: string; unlinked: boolean; n: number }>(
     `SELECT p.status, p.platform, NOT EXISTS (SELECT 1 FROM post_materials pm WHERE pm.post_id = p.id) AS unlinked, count(*)::int AS n
@@ -232,6 +244,7 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
     unusedReady,
     scheduledAssigned,
     byCategory: [...cat.values()],
+    byPurpose: [...pur.values()],
     posts,
     publishedByPlatform: [...byPlatform].map(([platform, n]) => ({ platform, n })),
     publishedUnlinked,

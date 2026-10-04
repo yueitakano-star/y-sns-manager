@@ -104,7 +104,7 @@ export function MaterialForm({ storeKey, storeName, casts, sets, today, defaultC
         }),
       );
       void submit(
-        () => createInterviewAction(storeKey, { requestKey, shotOn, setId, castIds, takeNo: toNum(takeNo) ?? null, videoCount: toNum(quantity) ?? 1, title: title || null, status, storageUrl, memo, answers: list }),
+        () => createInterviewAction(storeKey, { requestKey, purpose, shotOn, setId, castIds, takeNo: toNum(takeNo) ?? null, videoCount: toNum(quantity) ?? 1, title: title || null, status, storageUrl, memo, answers: list }),
         (d) => finish(d),
       );
       return;

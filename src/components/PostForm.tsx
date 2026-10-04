@@ -34,6 +34,7 @@ export interface PickItem {
   scheduled_count: number;
   set_label: string | null;
   set_id: string | null;
+  purpose: string | null;
 }
 interface SetInfo { id: string; set_number: number; title: string }
 
@@ -104,6 +105,7 @@ export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId
   const [fCast, setFCast] = useState('');
   const [fCat, setFCat] = useState('');
   const [onlyUnused, setOnlyUnused] = useState(false);
+  const [fPurpose, setFPurpose] = useState('');
 
   const itemById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
   const selected = itemIds.map((id) => itemById.get(id)).filter(Boolean) as PickItem[];
@@ -114,6 +116,7 @@ export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId
   const visible = items.filter((i) => {
     if (onlyUnused && i.published_count > 0) return false;
     if (fCat && i.category !== fCat) return false;
+    if (fPurpose && i.purpose !== fPurpose) return false;
     if (fCast === 'common' ? i.cast_ids.length > 0 : fCast && !i.cast_ids.includes(fCast)) return false;
     if (q) {
       const s = q.toLowerCase();
@@ -261,6 +264,12 @@ export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId
           <select aria-label="種類で絞る" className="input !w-auto" value={fCat} onChange={(e) => setFCat(e.target.value)}>
             <option value="">全種類</option>
             {Object.values(CATEGORY_BY_KEY).map((c) => (<option key={c.key} value={c.key}>{c.name}</option>))}
+          </select>
+          <select aria-label="用途で絞る" className="input !w-auto" value={fPurpose} onChange={(e) => setFPurpose(e.target.value)}>
+            <option value="">全用途</option>
+            <option value="sns">SNS</option>
+            <option value="ad">広告</option>
+            <option value="other">その他</option>
           </select>
           <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" className="size-5" checked={onlyUnused} onChange={(e) => setOnlyUnused(e.target.checked)} />未使用のみ</label>
         </div>

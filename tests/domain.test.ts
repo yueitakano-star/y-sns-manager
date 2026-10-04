@@ -518,3 +518,20 @@ describe('かんたん投稿', () => {
     await rejects(createQuickUpload(env.db, env.viewerB, B, { images: 1 }), 'forbidden');
   });
 });
+
+describe('用途', () => {
+  it('用途別の集計（使用済み・未使用・投稿可能）と、インタビュー撮影への用途指定', async () => {
+    const a = await cast('Aさん');
+    const sns = await prPhotos(a.id, 3, { purpose: 'sns' });
+    await prPhotos(a.id, 2, { purpose: 'ad' });
+    await prPhotos(a.id, 1);
+    const set = (await listQuestionSets(env.db))[0];
+    await createInterviewShoot(env.db, env.admin, B, { shotOn: '2025-09-01', setId: set.id, castIds: [a.id], purpose: 'ad' });
+    const its = await items(sns.batchId);
+    await post([its[0].id], [a.id], { platform: 'instagram', status: 'published', publishedAt: '2025-09-10T19:30' });
+    const by = Object.fromEntries((await storeStats(env.db, env.admin, B, ALL)).byPurpose.map((p) => [p.purpose ?? 'none', p]));
+    expect(by.sns).toMatchObject({ total: 3, used: 1, unused: 2, ready: 2 });
+    expect(by.ad).toMatchObject({ total: 3, used: 0, unused: 3 });
+    expect(by.none).toMatchObject({ total: 1 });
+  });
+});

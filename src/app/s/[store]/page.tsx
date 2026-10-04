@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { pageCtx, one, type SP } from '@/lib/page';
 import { castStats, storeStats } from '@/lib/domain/stats';
-import { CATEGORY_BY_KEY, PLATFORM_LABEL, QUESTION_COUNT, SET_COUNT, type CategoryKey, type Platform } from '@/lib/constants';
+import { CATEGORY_BY_KEY, PURPOSE_LABEL, PLATFORM_LABEL, QUESTION_COUNT, SET_COUNT, type CategoryKey, type Platform } from '@/lib/constants';
 import { parsePeriod, periodLabel } from '@/lib/jst';
 import { PageHeader, SectionTitle, Stat, LinkBtn, fmtNum } from '@/components/ui';
 import { PeriodFilter } from '@/components/PeriodFilter';
@@ -60,6 +60,23 @@ export default async function Dashboard({ params, searchParams }: { params: Prom
                   <td className="td">{CATEGORY_BY_KEY[c.category as CategoryKey]?.name ?? c.category}</td>
                   <td className="td text-right tabular-nums">{c.images}</td><td className="td text-right tabular-nums">{c.videos}</td>
                   <td className="td text-right tabular-nums">{c.others}</td><td className="td text-right font-semibold tabular-nums">{c.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {stats.byPurpose.length ? (
+        <div className="mt-2 overflow-x-auto rounded-xl border border-slate-200 bg-white" data-testid="purpose-stats">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50"><tr><th className="th">用途別</th><th className="th text-right">素材</th><th className="th text-right">使用済み</th><th className="th text-right">未使用</th><th className="th text-right">未使用・投稿可能</th></tr></thead>
+            <tbody className="divide-y divide-slate-100">
+              {stats.byPurpose.map((p) => (
+                <tr key={p.purpose ?? 'none'}>
+                  <td className="td">{p.purpose ? PURPOSE_LABEL[p.purpose as keyof typeof PURPOSE_LABEL] : '未設定'}</td>
+                  <td className="td text-right tabular-nums">{p.total}</td><td className="td text-right tabular-nums">{p.used}</td>
+                  <td className="td text-right tabular-nums">{p.unused}</td><td className="td text-right font-semibold tabular-nums">{p.ready}</td>
                 </tr>
               ))}
             </tbody>

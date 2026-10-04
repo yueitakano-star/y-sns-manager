@@ -46,6 +46,7 @@ const materialSchema = z.object({
 
 const interviewSchema = z.object({
   requestKey,
+  purpose: purposeSchema,
   shotOn: dateStr('撮影日'),
   setId: idStr('質問セット'),
   castIds: z.array(idStr('キャスト')).min(1, '出演キャストを1人以上選択してください。').max(10),
@@ -256,6 +257,7 @@ export async function createInterviewShoot(db: Db, actor: Actor, storeId: string
     const b = await createBatchRow(q, actor, {
       storeId,
       category: 'interview',
+      purpose: v.purpose,
       otherLabel: null,
       mediaKind: 'video',
       title: v.title ?? `${label} 撮影${takeNo}回目`,
@@ -660,13 +662,14 @@ export interface PickerItem extends ItemRow {
   shot_on: string;
   set_label: string | null;
   set_id: string | null;
+  purpose: 'sns' | 'ad' | 'other' | null;
 }
 
 /** 投稿登録の素材選択肢（取消されていない個別素材。過去の使用回数つき） */
 export async function listPickerItems(q: Queryable, actor: Actor, storeId: string): Promise<PickerItem[]> {
   await requireRole(q, actor, storeId, 'viewer');
   return q.query<PickerItem>(
-    `SELECT ${ITEM_SELECT}, b.title AS batch_title, b.display_code, b.category, b.shot_on,
+    `SELECT ${ITEM_SELECT}, b.title AS batch_title, b.display_code, b.category, b.shot_on, b.purpose,
             (SELECT 'SET ' || lpad(qs.set_number::text,2,'0') || '｜' || qs.title FROM interview_sessions s
                JOIN question_sets qs ON qs.id=s.question_set_id WHERE s.batch_id=b.id AND s.voided_at IS NULL LIMIT 1) AS set_label,
             (SELECT s.question_set_id FROM interview_sessions s WHERE s.batch_id=b.id AND s.voided_at IS NULL LIMIT 1) AS set_id
