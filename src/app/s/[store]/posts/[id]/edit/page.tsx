@@ -4,6 +4,7 @@ import { getPost } from '@/lib/domain/posts';
 import { listCasts } from '@/lib/domain/casts';
 import { listPickerItems } from '@/lib/domain/materials';
 import { listQuestionSets } from '@/lib/domain/stats';
+import { listQuizSets } from '@/lib/domain/quiz';
 import { AppError } from '@/lib/errors';
 import { toJstLocal } from '@/lib/jst';
 import { PageHeader } from '@/components/ui';
@@ -17,7 +18,7 @@ export default async function EditPost({ params }: { params: Promise<{ store: st
     if (e instanceof AppError && e.code === 'not_found') notFound();
     throw e;
   });
-  const [casts, items, sets] = await Promise.all([listCasts(db, user, store.id), listPickerItems(db, user, store.id), listQuestionSets(db)]);
+  const [casts, items, sets, quizzes] = await Promise.all([listCasts(db, user, store.id), listPickerItems(db, user, store.id), listQuestionSets(db), listQuizSets(db)]);
   return (
     <>
       <PageHeader kind="post" title="投稿を編集" sub={`${store.name} ／ 予定を投稿済みにする場合も、この投稿を更新します（新規作成しないので二重計上されません）`} />
@@ -29,7 +30,9 @@ export default async function EditPost({ params }: { params: Promise<{ store: st
         casts={casts.map((c) => ({ id: c.id, name: c.display_name, active: c.status === 'active' }))}
         items={items}
         sets={sets.map((s) => ({ id: s.id, set_number: s.set_number, title: s.title }))}
+        quizzes={quizzes.map((z) => ({ id: z.id, set_number: z.set_number, title: z.title }))}
         initial={{
+          quizSetId: p.quiz_set_id ?? '',
           category: p.category,
           otherLabel: p.other_label ?? '',
           questionSetId: p.question_set_id ?? '',

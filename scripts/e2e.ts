@@ -334,6 +334,35 @@ async function main() {
       await page.getByTestId('item-select-list').waitFor();
     });
 
+    console.log('\n[クイズ集]');
+    await t('クイズ集: 20セット一覧、撮影用は正解を出さず、担当者用に正解とコメント', async () => {
+      await page.goto(`${BASE}/s/b-club/quiz`);
+      assert((await page.getByTestId('quiz-sets').locator('> li').count()) === 20, '20セットでない');
+      assert((await page.getByTestId('quiz-sets').innerText()).includes('QUIZ 20｜季節と行事'), 'QUIZ 20なし');
+      await page.goto(`${BASE}/s/b-club/quiz/1`);
+      const q = await page.getByTestId('quiz-questions').innerText();
+      assert(q.includes('日本で一番高い山は？') && q.includes('超難問'), '問題が出ない');
+      assert(!q.includes('富士山') && !q.includes('奈良県') && !q.includes('琵琶湖'), '撮影用に正解が出ている');
+      await page.goto(`${BASE}/s/b-club/quiz/1/answers`);
+      assert((await page.getByTestId('quiz-answers').innerText()).includes('富士山'), '正解が出ない');
+      assert((await page.getByTestId('quiz-comment').innerText()).includes('第5問の正解は【奈良県】'), 'コメントが出ない');
+      assert((await page.goto(`${BASE}/s/b-club/quiz/99`))!.status() === 404, '存在しないセットが404でない');
+    });
+    await t('クイズの投稿登録: セットを引き継ぎ、一覧に投稿済みが反映される', async () => {
+      await page.goto(`${BASE}/s/b-club/quiz`);
+      await page.getByTestId('quiz-sets').locator('> li').first().getByRole('link', { name: '投稿登録' }).click();
+      await page.getByLabel('クイズセット').waitFor();
+      assert((await page.getByLabel('クイズセット').locator('option:checked').innerText()).includes('QUIZ 01｜日本地理'), 'セットが引き継がれない');
+      await page.getByLabel(/^タイトル/).fill('クイズ01 投稿');
+      await page.locator('#instagram-status').selectOption('published');
+      await page.locator('#instagram-pub').fill('2026-01-12T12:00');
+      await page.getByTestId('submit-post').click();
+      await page.getByTestId('created-banner').waitFor();
+      assert((await page.locator('body').innerText()).includes('QUIZ 01｜日本地理'), '投稿詳細にセットが出ない');
+      await page.goto(`${BASE}/s/b-club/quiz`);
+      assert(/投稿済み 1回/.test(await page.getByTestId('quiz-sets').locator('> li').first().innerText()), '一覧に投稿済みが出ない');
+    });
+
     console.log('\n[CSV]');
     await t('CSVは数式インジェクションを無害化する', async () => {
       await page.goto(`${BASE}/s/b-club/casts/new`);

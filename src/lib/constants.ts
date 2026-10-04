@@ -15,7 +15,7 @@ export type CategoryKey =
   | 'daily_photo'
   | 'event_material'
   | 'other';
-export type PostCategoryKey = 'interview' | 'self_pr' | 'brand_video' | 'daily_photo' | 'other';
+export type PostCategoryKey = 'interview' | 'self_pr' | 'brand_video' | 'daily_photo' | 'other' | 'quiz';
 
 export const CATEGORIES = seed.material_categories as {
   key: CategoryKey;
@@ -39,7 +39,10 @@ export const MATERIAL_STATE_LABEL = Object.fromEntries(MATERIAL_STATES.map((s) =
   string
 >;
 
-export const POST_CATEGORIES = seed.post_categories as { key: PostCategoryKey; name: string }[];
+export const POST_CATEGORIES: { key: PostCategoryKey; name: string }[] = [
+  ...(seed.post_categories as { key: PostCategoryKey; name: string }[]),
+  { key: 'quiz', name: 'クイズ' },
+];
 export const POST_CATEGORY_LABEL = Object.fromEntries(POST_CATEGORIES.map((c) => [c.key, c.name])) as Record<
   PostCategoryKey,
   string
@@ -71,3 +74,8 @@ export const PURPOSES: { key: Purpose; name: string }[] = [
   { key: 'other', name: 'その他' },
 ];
 export const PURPOSE_LABEL: Record<Purpose, string> = { sns: 'SNS', ad: '広告', other: 'その他' };
+
+export const QUIZ_SET_COUNT = 20;
+export function quizLabel(setNumber: number, title: string): string {
+  return `QUIZ ${String(setNumber).padStart(2, '0')}｜${title}`;
+}

@@ -81,7 +81,7 @@ export function PostList({ rows, base }: { rows: PostRow[]; base: string }) {
             <div className="mt-1 font-bold">{p.title}</div>
             <div className="mt-0.5 text-sm text-slate-600">
               {p.category === 'other' && p.other_label ? p.other_label : POST_CATEGORY_LABEL[p.category]}
-              {p.set_label ? ` ・ ${p.set_label}` : ''} ・{' '}
+              {p.set_label ? ` ・ ${p.set_label}` : ''}{p.quiz_label ? ` ・ ${p.quiz_label}` : ''} ・{' '}
               {p.status === 'published' && p.published_at ? `投稿 ${formatJaDateTime(p.published_at)}` : p.scheduled_at ? `予定 ${formatJaDateTime(p.scheduled_at)}` : `登録 ${jstDate(p.created_at)}`}
             </div>
             <div className="mt-0.5 text-sm text-slate-600">出演: {p.cast_names.length ? p.cast_names.join('、') : '店舗共通（キャストなし）'}</div>

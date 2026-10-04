@@ -172,6 +172,43 @@ export async function seedMaster(db: Db): Promise<void> {
       }
     }
   });
+  await seedQuiz(db);
+}
+
+interface QuizSeed {
+  quiz_sets: {
+    key: string;
+    set_number: number;
+    version: number;
+    title: string;
+    comment_template: string;
+    memo: string;
+    reference: string;
+    questions: { key: string; position: number; level: string; text: string; answer: string }[];
+  }[];
+}
+
+/** クイズ集(20セット×5問)を安定keyで冪等に投入 */
+export async function seedQuiz(db: Db): Promise<void> {
+  const file = path.join(process.cwd(), 'seed', 'QUIZ_SEED.json');
+  if (!fs.existsSync(file)) return;
+  const seed = JSON.parse(fs.readFileSync(file, 'utf8')) as QuizSeed;
+  await db.tx(async (q) => {
+    for (const s of seed.quiz_sets) {
+      const rows = await q.query<{ id: string }>(
+        `INSERT INTO quiz_sets(key, set_number, version, title, comment_template, memo, reference) VALUES ($1,$2,$3,$4,$5,$6,$7)
+         ON CONFLICT (key) DO UPDATE SET title = EXCLUDED.title, comment_template = EXCLUDED.comment_template, memo = EXCLUDED.memo, reference = EXCLUDED.reference RETURNING id`,
+        [s.key, s.set_number, s.version, s.title, s.comment_template, s.memo, s.reference],
+      );
+      for (const qu of s.questions) {
+        await q.query(
+          `INSERT INTO quiz_questions(key, quiz_set_id, position, level, text, answer) VALUES ($1,$2,$3,$4,$5,$6)
+           ON CONFLICT (key) DO UPDATE SET level = EXCLUDED.level, text = EXCLUDED.text, answer = EXCLUDED.answer`,
+          [qu.key, rows[0].id, qu.position, qu.level, qu.text, qu.answer],
+        );
+      }
+    }
+  });
 }
 
 declare global {
@@ -186,8 +223,8 @@ export function getDb(): Promise<Db> {
       const db = await createDb();
       if (process.env.AUTO_MIGRATE !== 'false') {
         await migrate(db);
-        const [c] = await db.query<{ s: number; q: number }>("SELECT (SELECT count(*) FROM stores)::int AS s, (SELECT count(*) FROM questions)::int AS q");
-        if (c.s < 3 || c.q < 60) await seedMaster(db);
+        const [c] = await db.query<{ s: number; q: number; z: number }>("SELECT (SELECT count(*) FROM stores)::int AS s, (SELECT count(*) FROM questions)::int AS q, (SELECT count(*) FROM quiz_questions)::int AS z");
+        if (c.s < 3 || c.q < 60 || c.z < 100) await seedMaster(db);
       }
       return db;
     })();

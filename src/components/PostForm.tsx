@@ -11,6 +11,7 @@ import {
   POST_CATEGORIES,
   POST_STATES,
   setLabel,
+  quizLabel,
   type CategoryKey,
   type MaterialStatus,
   type MediaKind,
@@ -37,6 +38,7 @@ export interface PickItem {
   purpose: string | null;
 }
 interface SetInfo { id: string; set_number: number; title: string }
+interface QuizInfo { id: string; set_number: number; title: string }
 
 interface TargetState {
   enabled: boolean;
@@ -53,6 +55,7 @@ export interface PostInitial {
   category: PostCategoryKey;
   otherLabel: string;
   questionSetId: string;
+  quizSetId?: string;
   title: string;
   itemIds: string[];
   castIds: string[];
@@ -65,24 +68,28 @@ export interface PostInitial {
 
 const nowJst = () => toJstLocal(new Date().toISOString());
 
-export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId, initial, defaultItemIds, defaultCastId }: {
+export function PostForm({ storeKey, storeName, casts, items, sets, quizzes, mode, postId, initial, defaultItemIds, defaultCastId, defaultCategory, defaultQuizSetId }: {
   storeKey: string;
   storeName: string;
   casts: { id: string; name: string; active: boolean }[];
   items: PickItem[];
   sets: SetInfo[];
+  quizzes: QuizInfo[];
   mode: 'create' | 'edit';
   postId?: string;
   initial?: PostInitial;
   defaultItemIds?: string[];
   defaultCastId?: string;
+  defaultCategory?: string;
+  defaultQuizSetId?: string;
 }) {
   const router = useRouter();
   const { busy, error, fields, submit, setError, setFields } = useSubmitter();
   const [requestKey] = useState(newRequestKey);
   const validDefaultItems = (defaultItemIds ?? []).filter((id) => items.some((i) => i.id === id));
-  const [category, setCategory] = useState<PostCategoryKey>(initial?.category ?? 'self_pr');
-  const [catTouched, setCatTouched] = useState(!!initial);
+  const [category, setCategory] = useState<PostCategoryKey>(initial?.category ?? (defaultCategory === 'quiz' ? 'quiz' : 'self_pr'));
+  const [catTouched, setCatTouched] = useState(!!initial || defaultCategory === 'quiz');
+  const [quizSetId, setQuizSetId] = useState(initial?.quizSetId ?? defaultQuizSetId ?? '');
   const [otherLabel, setOtherLabel] = useState(initial?.otherLabel ?? '');
   const [questionSetId, setQuestionSetId] = useState(initial?.questionSetId ?? '');
   const [title, setTitle] = useState(initial?.title ?? '');
@@ -147,7 +154,7 @@ export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFields({});
-    const base = { category, otherLabel, questionSetId: category === 'interview' && questionSetId ? questionSetId : null, title, itemIds, castIds: commonOnly ? [] : castIds, caption, memo };
+    const base = { category, otherLabel, questionSetId: category === 'interview' && questionSetId ? questionSetId : null, quizSetId: category === 'quiz' && quizSetId ? quizSetId : null, title, itemIds, castIds: commonOnly ? [] : castIds, caption, memo };
     const mapT = (p: Platform, t: Omit<TargetState, 'enabled'>) => ({ platform: p, format: t.format, status: t.status, scheduledAt: t.scheduledAt || null, publishedAt: t.publishedAt || null, url: t.url, publicStateNote: t.publicStateNote });
     if (mode === 'edit' && postId) {
       void submit(() => updatePostAction(storeKey, postId, { ...base, target: mapT(platform, editTarget) }), () => { router.push(`/s/${storeKey}/posts/${postId}?saved=1`); router.refresh(); });
@@ -229,6 +236,14 @@ export function PostForm({ storeKey, storeName, casts, items, sets, mode, postId
             <select id="questionSetId" className="input" value={questionSetId} onChange={(e) => setQuestionSetId(e.target.value)}>
               <option value="">選択してください（任意）</option>
               {sets.map((s) => (<option key={s.id} value={s.id}>{setLabel(s.set_number, s.title)}</option>))}
+            </select>
+          </Field>
+        ) : null}
+        {category === 'quiz' ? (
+          <Field label="クイズセット" htmlFor="quizSetId" error={fields.quizSetId}>
+            <select id="quizSetId" className="input" value={quizSetId} onChange={(e) => setQuizSetId(e.target.value)}>
+              <option value="">選択してください（任意）</option>
+              {quizzes.map((z) => (<option key={z.id} value={z.id}>{quizLabel(z.set_number, z.title)}</option>))}
             </select>
           </Field>
         ) : null}

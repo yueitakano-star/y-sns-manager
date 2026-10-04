@@ -10,6 +10,7 @@ const ITEMS = [
   { path: '/posts', label: '投稿', icon: '✉' },
   { path: '/calendar', label: 'カレンダー', icon: '▦' },
   { path: '/questions', label: '質問集', icon: '？' },
+  { path: '/quiz', label: 'クイズ', icon: '✎' },
 ];
 
 export function StoreNav({ base, variant }: { base: string; variant: 'top' | 'bottom' }) {
@@ -36,13 +37,13 @@ export function StoreNav({ base, variant }: { base: string; variant: 'top' | 'bo
   }
   return (
     <nav aria-label="店舗メニュー（スマホ）" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-300 bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-      <ul className="grid grid-cols-6">
+      <ul className="grid grid-cols-7">
         {ITEMS.map((i) => (
           <li key={i.path}>
             <Link
               href={base + i.path}
               aria-current={isActive(i.path) ? 'page' : undefined}
-              className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${isActive(i.path) ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
+              className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${isActive(i.path) ? 'bg-slate-800 text-white' : 'text-slate-600'}`}
             >
               <span className="text-base leading-none" aria-hidden>{i.icon}</span>
               {i.label}

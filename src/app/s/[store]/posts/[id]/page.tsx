@@ -36,6 +36,7 @@ export default async function PostDetail({ params, searchParams }: { params: Pro
           {p.material_count === 0 ? <Badge tone="amber">素材未紐付け</Badge> : <Badge tone="mat">素材 {p.material_count}点</Badge>}
         </div>
         {p.set_label ? <p>質問セット: <b>{p.set_label}</b></p> : null}
+        {p.quiz_label ? <p>クイズセット: <b>{p.quiz_label}</b></p> : null}
         {p.scheduled_at ? <p>予定日時: {formatJaDateTime(p.scheduled_at)}</p> : null}
         {p.status === 'published' && p.published_at ? <p>実際の投稿日時: <b>{formatJaDateTime(p.published_at)}</b></p> : null}
         {p.original_scheduled_at && p.status === 'published' && p.original_scheduled_at !== p.scheduled_at ? <p className="text-slate-500">当初の予定日時: {formatJaDateTime(p.original_scheduled_at)}</p> : null}

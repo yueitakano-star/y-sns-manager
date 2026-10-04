@@ -1,0 +1,925 @@
+{
+  "schema_version": 1,
+  "quiz_sets": [
+    {
+      "key": "quiz-v1-set-01",
+      "set_number": 1,
+      "version": 1,
+      "title": "日本地理",
+      "questions": [
+        {
+          "key": "quiz-v1-set-01-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "日本の都道府県は、全部でいくつ？",
+          "answer": "47"
+        },
+        {
+          "key": "quiz-v1-set-01-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "日本で一番高い山は？",
+          "answer": "富士山"
+        },
+        {
+          "key": "quiz-v1-set-01-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "日本で一番面積が大きい都道府県は？",
+          "answer": "北海道"
+        },
+        {
+          "key": "quiz-v1-set-01-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "日本で一番面積が大きい湖は？",
+          "answer": "琵琶湖"
+        },
+        {
+          "key": "quiz-v1-set-01-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "海なし県8県のうち、ほかの海なし県と一つも接していない県は？",
+          "answer": "奈良県"
+        }
+      ],
+      "comment_template": "第5問の正解は【奈良県】！\n奈良県が接しているのは、大阪府・京都府・三重県・和歌山県。4府県とも海があるので、奈良県だけは別の海なし県と接していません。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は「海なし県＝海に面していない県」と補足して出題。",
+      "reference": "じゃらん｜海なし県は全国で8県"
+    },
+    {
+      "key": "quiz-v1-set-02",
+      "set_number": 2,
+      "version": 1,
+      "title": "世界地理",
+      "questions": [
+        {
+          "key": "quiz-v1-set-02-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "パリが首都の国は？",
+          "answer": "フランス"
+        },
+        {
+          "key": "quiz-v1-set-02-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "ギザのピラミッドがある国は？",
+          "answer": "エジプト"
+        },
+        {
+          "key": "quiz-v1-set-02-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "標高が世界で一番高い山は？",
+          "answer": "エベレスト"
+        },
+        {
+          "key": "quiz-v1-set-02-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "オーストラリアの首都は？",
+          "answer": "キャンベラ"
+        },
+        {
+          "key": "quiz-v1-set-02-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "地球の「中心」から一番遠い山頂を持つ山は？",
+          "answer": "チンボラソ山"
+        }
+      ],
+      "comment_template": "第5問の正解は【チンボラソ山】！\n答えはエクアドルのチンボラソ山。地球は赤道付近がふくらんでいるため、海面からの高さではなく「地球の中心からの距離」で比べると、エベレストを上回ります。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第3問は「標高」、第5問は「地球の中心からの距離」。この条件を省略しない。",
+      "reference": "NOAA｜地球の中心から最も遠い山頂"
+    },
+    {
+      "key": "quiz-v1-set-03",
+      "set_number": 3,
+      "version": 1,
+      "title": "読めそうで読めない漢字",
+      "questions": [
+        {
+          "key": "quiz-v1-set-03-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "「海老」は、何と読む？",
+          "answer": "えび"
+        },
+        {
+          "key": "quiz-v1-set-03-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "「葡萄」は、何と読む？",
+          "answer": "ぶどう"
+        },
+        {
+          "key": "quiz-v1-set-03-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "「海豚」は、何と読む？",
+          "answer": "いるか"
+        },
+        {
+          "key": "quiz-v1-set-03-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "花の名前「山茶花」は、何と読む？",
+          "answer": "さざんか"
+        },
+        {
+          "key": "quiz-v1-set-03-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "花の名前「躑躅」は、何と読む？",
+          "answer": "つつじ"
+        }
+      ],
+      "comment_template": "第5問の正解は【つつじ】！\n「躑躅」は、花の名前では「つつじ」と読みます。身近な花でも、漢字になると急に難しい！\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "漢字をカードや別端末で見せ、「何と読む？」と聞く。出題前に読みを口にしない。",
+      "reference": "大修館書店・漢字文化資料館｜躑躅"
+    },
+    {
+      "key": "quiz-v1-set-04",
+      "set_number": 4,
+      "version": 1,
+      "title": "ことわざ・言葉",
+      "questions": [
+        {
+          "key": "quiz-v1-set-04-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "「猿も木から○○」。○○に入る言葉は？",
+          "answer": "落ちる"
+        },
+        {
+          "key": "quiz-v1-set-04-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "価値の分からない相手に高価な物を与えること。「猫に○○」？",
+          "answer": "小判"
+        },
+        {
+          "key": "quiz-v1-set-04-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "「石の上にも○年」。何年？",
+          "answer": "3年"
+        },
+        {
+          "key": "quiz-v1-set-04-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "「情けは人のためならず」は、どんな意味？",
+          "answer": "人への親切は、巡り巡って自分のためにもなる"
+        },
+        {
+          "key": "quiz-v1-set-04-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "「登竜門」の由来になった急流「竜門」は、中国の何という川にある？",
+          "answer": "黄河（こうが）"
+        }
+      ],
+      "comment_template": "第5問の正解は【黄河（こうが）】！\n「竜門」は中国の黄河にある急流。そこを登りきった魚は竜になる、という伝説に結び付いた言葉です。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第4問は意味が合っていれば正解。「親切にすると相手のためにならない」は不正解。",
+      "reference": "小学館・デジタル大辞泉｜登竜門"
+    },
+    {
+      "key": "quiz-v1-set-05",
+      "set_number": 5,
+      "version": 1,
+      "title": "毎日見るお金",
+      "questions": [
+        {
+          "key": "quiz-v1-set-05-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "100円玉10枚で、いくら？",
+          "answer": "1,000円"
+        },
+        {
+          "key": "quiz-v1-set-05-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "現在発行されている日本の硬貨で、穴があるのは何円玉と何円玉？",
+          "answer": "5円玉と50円玉"
+        },
+        {
+          "key": "quiz-v1-set-05-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "10円玉に描かれている建物は？",
+          "answer": "平等院鳳凰堂（びょうどういんほうおうどう）"
+        },
+        {
+          "key": "quiz-v1-set-05-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "1円玉1枚の重さは、何グラム？",
+          "answer": "1グラム"
+        },
+        {
+          "key": "quiz-v1-set-05-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "10円玉の数字「10」を囲む植物の図柄は、何と呼ばれる？",
+          "answer": "常盤木（ときわぎ）"
+        }
+      ],
+      "comment_template": "第5問の正解は【常盤木（ときわぎ）】！\n数字「10」のまわりの図柄は「常盤木」。鳳凰堂がある側の「唐草」とは別なので、10円玉の両面を見比べてみてね。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第3問は「平等院」でも正解扱いで可。第5問は必ず数字「10」の側を指定。",
+      "reference": "財務省｜通常貨幣一覧"
+    },
+    {
+      "key": "quiz-v1-set-06",
+      "set_number": 6,
+      "version": 1,
+      "title": "カレンダーの常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-06-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "1年は何か月？",
+          "answer": "12か月"
+        },
+        {
+          "key": "quiz-v1-set-06-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "うるう年ではない年の2月は、何日まで？",
+          "answer": "28日"
+        },
+        {
+          "key": "quiz-v1-set-06-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "うるう年の1年は、何日？",
+          "answer": "366日"
+        },
+        {
+          "key": "quiz-v1-set-06-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "昔の月の呼び名で、10月は「何月」？",
+          "answer": "神無月（かんなづき）"
+        },
+        {
+          "key": "quiz-v1-set-06-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "グレゴリオ暦では、400年間にうるう年は何回ある？",
+          "answer": "97回"
+        }
+      ],
+      "comment_template": "第5問の正解は【97回】！\n4で割り切れる年は基本的にうるう年。ただし100で割り切れる年は除き、400で割り切れる年は戻します。400年間では100−4＋1＝97回！\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は暦の種類「グレゴリオ暦」をテロップにも記載する。",
+      "reference": "国立天文台｜どの年がうるう年になるの？"
+    },
+    {
+      "key": "quiz-v1-set-07",
+      "set_number": 7,
+      "version": 1,
+      "title": "時計を見ずに答えられる？",
+      "questions": [
+        {
+          "key": "quiz-v1-set-07-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "1時間は何分？",
+          "answer": "60分"
+        },
+        {
+          "key": "quiz-v1-set-07-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "半日は何時間？",
+          "answer": "12時間"
+        },
+        {
+          "key": "quiz-v1-set-07-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "1時間30分は、全部で何分？",
+          "answer": "90分"
+        },
+        {
+          "key": "quiz-v1-set-07-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "3時30分の時計。長針と短針が作る小さい方の角度は？",
+          "answer": "75度"
+        },
+        {
+          "key": "quiz-v1-set-07-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "普通の時計の長針と短針は、24時間で何回重なる？",
+          "answer": "22回"
+        }
+      ],
+      "comment_template": "第5問の正解は【22回】！\n長針と短針が重なるのは12時間で11回なので、24時間で22回。長針だけでなく短針も進み続けるのがポイントです。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "普通の12時間表示の時計を想定。第5問は正午から翌日の正午直前までとし、両端を二重に数えない。第4問：180度−105度＝75度。",
+      "reference": "計算問題：上の解説と出題メモで検算できます。"
+    },
+    {
+      "key": "quiz-v1-set-08",
+      "set_number": 8,
+      "version": 1,
+      "title": "算数、まだ覚えてる？",
+      "questions": [
+        {
+          "key": "quiz-v1-set-08-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "7×8は？",
+          "answer": "56"
+        },
+        {
+          "key": "quiz-v1-set-08-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "半分の、さらに半分。分数でいうと？",
+          "answer": "4分の1"
+        },
+        {
+          "key": "quiz-v1-set-08-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "1,000円の商品が30％引き。値段はいくら？",
+          "answer": "700円"
+        },
+        {
+          "key": "quiz-v1-set-08-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "1から20までの整数を、全部足すといくつ？",
+          "answer": "210"
+        },
+        {
+          "key": "quiz-v1-set-08-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "1から100までの整数を全部掛けた数。末尾に「0」は何個続く？",
+          "answer": "24個"
+        }
+      ],
+      "comment_template": "第5問の正解は【24個】！\n末尾の0は「2×5」の組でできます。5の倍数が20個、さらに25の倍数が4個あるので、20＋4＝24個。大きな数を全部計算する必要はありません。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は「全部足す」ではなく「全部掛ける」。式「1×2×3×...×100」を表示。",
+      "reference": "計算問題：上の解説と出題メモで検算できます。"
+    },
+    {
+      "key": "quiz-v1-set-09",
+      "set_number": 9,
+      "version": 1,
+      "title": "図形の常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-09-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "三角形の辺は、何本？",
+          "answer": "3本"
+        },
+        {
+          "key": "quiz-v1-set-09-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "五角形の角は、いくつ？",
+          "answer": "5つ"
+        },
+        {
+          "key": "quiz-v1-set-09-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "平面上の三角形の内角を全部足すと、何度？",
+          "answer": "180度"
+        },
+        {
+          "key": "quiz-v1-set-09-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "正六角形の1つの内角は、何度？",
+          "answer": "120度"
+        },
+        {
+          "key": "quiz-v1-set-09-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "正二十面体の頂点は、全部でいくつ？",
+          "answer": "12個"
+        }
+      ],
+      "comment_template": "第5問の正解は【12個】！\n正二十面体は、20枚の正三角形でできた立体。各面の角を数えると20×3＝60。1つの頂点に5枚の面が集まるので、60÷5＝12個です。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は「正二十面体」。単に二十面体と言うと、形によって答えが変わる。",
+      "reference": "計算問題：上の解説と出題メモで検算できます。"
+    },
+    {
+      "key": "quiz-v1-set-10",
+      "set_number": 10,
+      "version": 1,
+      "title": "宇宙の常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-10-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "地球のまわりを回っている、天然の衛星は？",
+          "answer": "月"
+        },
+        {
+          "key": "quiz-v1-set-10-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "地球は太陽から数えて、何番目の惑星？",
+          "answer": "3番目"
+        },
+        {
+          "key": "quiz-v1-set-10-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "「赤い惑星」と呼ばれる惑星は？",
+          "answer": "火星"
+        },
+        {
+          "key": "quiz-v1-set-10-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "太陽に一番近い惑星は？",
+          "answer": "水星"
+        },
+        {
+          "key": "quiz-v1-set-10-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "太陽を1周するより、自転1回の方が長くかかる惑星は？",
+          "answer": "金星"
+        }
+      ],
+      "comment_template": "第5問の正解は【金星】！\n金星は、太陽を1周する公転が約225地球日、自転1回が約243地球日。1周する間に、まだ1回転し終わっていません。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "「1日が1年より長い」と言い換えない。ここで比べるのは太陽日ではなく、自転周期と公転周期。",
+      "reference": "国立天文台・暦計算室｜水星と金星"
+    },
+    {
+      "key": "quiz-v1-set-11",
+      "set_number": 11,
+      "version": 1,
+      "title": "天気と空気",
+      "questions": [
+        {
+          "key": "quiz-v1-set-11-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "空から落ちてくる、水のしずくを何という？",
+          "answer": "雨"
+        },
+        {
+          "key": "quiz-v1-set-11-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "水が気体になったものを、何という？",
+          "answer": "水蒸気"
+        },
+        {
+          "key": "quiz-v1-set-11-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "気温を測る道具は？",
+          "answer": "温度計"
+        },
+        {
+          "key": "quiz-v1-set-11-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "普通の虹の、いちばん外側の色は？",
+          "answer": "赤"
+        },
+        {
+          "key": "quiz-v1-set-11-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "水蒸気を除いた空気で、窒素・酸素の次に多い気体は？",
+          "answer": "アルゴン"
+        }
+      ],
+      "comment_template": "第5問の正解は【アルゴン】！\n乾いた空気では、窒素・酸素に続いて多いのがアルゴン。二酸化炭素よりも多く含まれています。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第4問は主虹（通常見える虹）。外側に現れる副虹は色の並びが逆。第5問は水蒸気を除く条件を省略しない。",
+      "reference": "ダイキン・空気の学校｜空気の成分"
+    },
+    {
+      "key": "quiz-v1-set-12",
+      "set_number": 12,
+      "version": 1,
+      "title": "食べ物の正体",
+      "questions": [
+        {
+          "key": "quiz-v1-set-12-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "豆腐の主な原料になる豆は？",
+          "answer": "大豆"
+        },
+        {
+          "key": "quiz-v1-set-12-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "チョコレートの原料になる豆は？",
+          "answer": "カカオ豆"
+        },
+        {
+          "key": "quiz-v1-set-12-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "かつお節は、何という魚から作る？",
+          "answer": "カツオ"
+        },
+        {
+          "key": "quiz-v1-set-12-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "ブロッコリーの緑のつぶつぶは、花が咲く前の何？",
+          "answer": "つぼみ"
+        },
+        {
+          "key": "quiz-v1-set-12-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "イチゴの表面のつぶつぶ。植物学的には「種」ではなく何？",
+          "answer": "果実（かじつ）"
+        }
+      ],
+      "comment_template": "第5問の正解は【果実（かじつ）】！\nイチゴのつぶつぶは、一つひとつが小さな果実。その中に種が入っています。ふだん「種」と思っていた部分も、実は果実なんです。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第4問は茎ではなく緑のつぶつぶ部分を指定。第5問は「果実」「実」「痩果（そうか）」を正解扱い。",
+      "reference": "日本作物学会の書籍紹介｜イチゴのつぶつぶ"
+    },
+    {
+      "key": "quiz-v1-set-13",
+      "set_number": 13,
+      "version": 1,
+      "title": "食卓の言葉",
+      "questions": [
+        {
+          "key": "quiz-v1-set-13-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "スパゲティやマカロニなどの総称は？",
+          "answer": "パスタ"
+        },
+        {
+          "key": "quiz-v1-set-13-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "レーズンは、何の果物を乾燥させたもの？",
+          "answer": "ブドウ"
+        },
+        {
+          "key": "quiz-v1-set-13-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "寿司屋で「あがり」といえば、何の飲み物？",
+          "answer": "お茶"
+        },
+        {
+          "key": "quiz-v1-set-13-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "パスタの「アルデンテ」は、どんなゆで加減？",
+          "answer": "中心にわずかに芯が残るゆで加減"
+        },
+        {
+          "key": "quiz-v1-set-13-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "アールグレイの香りのもとになる、柑橘の名前は？",
+          "answer": "ベルガモット"
+        }
+      ],
+      "comment_template": "第5問の正解は【ベルガモット】！\nアールグレイの特徴的な香りは、柑橘のベルガモットの香り。ハーブではなく、柑橘の名前です。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第4問は「少し芯が残る」「歯ごたえが残る」などでも正解。第5問は香りの種類を尋ねる。",
+      "reference": "Earl Grey tea｜香りの由来"
+    },
+    {
+      "key": "quiz-v1-set-14",
+      "set_number": 14,
+      "version": 1,
+      "title": "身近なモノ",
+      "questions": [
+        {
+          "key": "quiz-v1-set-14-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "日本の郵便番号は何桁？",
+          "answer": "7桁"
+        },
+        {
+          "key": "quiz-v1-set-14-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "紙のA3とA4。大きいのはどっち？",
+          "answer": "A3"
+        },
+        {
+          "key": "quiz-v1-set-14-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "鉛筆のHBと2B。より濃いのはどっち？",
+          "answer": "2B"
+        },
+        {
+          "key": "quiz-v1-set-14-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "鉛筆の芯の主な材料は、黒鉛と何？",
+          "answer": "粘土"
+        },
+        {
+          "key": "quiz-v1-set-14-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "郵便マーク「〒」が制定された当時、郵便を担当していた省の名前は？",
+          "answer": "逓信省（ていしんしょう）"
+        }
+      ],
+      "comment_template": "第5問の正解は【逓信省（ていしんしょう）】！\n答えは逓信省。「〒」が制定された1887年当時、郵便などを担当していた役所の名前です。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "マークの形の由来には複数の説明があるので、「何を図案化した？」ではなく省の名前を聞く。",
+      "reference": "郵便記号｜制定の歴史・参考文献"
+    },
+    {
+      "key": "quiz-v1-set-15",
+      "set_number": 15,
+      "version": 1,
+      "title": "単位の常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-15-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "1キロメートルは、何メートル？",
+          "answer": "1,000メートル"
+        },
+        {
+          "key": "quiz-v1-set-15-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "1キログラムは、何グラム？",
+          "answer": "1,000グラム"
+        },
+        {
+          "key": "quiz-v1-set-15-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "1ダースは、何個？",
+          "answer": "12個"
+        },
+        {
+          "key": "quiz-v1-set-15-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "1インチは、何センチメートル？",
+          "answer": "2.54センチメートル"
+        },
+        {
+          "key": "quiz-v1-set-15-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "船や飛行機で使う「1海里」は、正確に何メートル？",
+          "answer": "1,852メートル"
+        }
+      ],
+      "comment_template": "第5問の正解は【1,852メートル】！\n国際的な1海里は、1,852メートル。時速1海里で進む速さが「1ノット」です。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は普通のマイルではなく「海里（かいり）」。単位をはっきり読む。",
+      "reference": "NOAA｜海里とノットの違い"
+    },
+    {
+      "key": "quiz-v1-set-16",
+      "set_number": 16,
+      "version": 1,
+      "title": "理科・元素記号",
+      "questions": [
+        {
+          "key": "quiz-v1-set-16-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "水の化学式は？",
+          "answer": "H₂O（エイチ・ツー・オー）"
+        },
+        {
+          "key": "quiz-v1-set-16-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "酸素の元素記号は？",
+          "answer": "O（オー）"
+        },
+        {
+          "key": "quiz-v1-set-16-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "二酸化炭素の化学式は？",
+          "answer": "CO₂（シー・オー・ツー）"
+        },
+        {
+          "key": "quiz-v1-set-16-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "金の元素記号は？",
+          "answer": "Au（エー・ユー）"
+        },
+        {
+          "key": "quiz-v1-set-16-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "正式な元素記号が、アルファベット1文字の元素は全部で何種類？",
+          "answer": "14種類"
+        }
+      ],
+      "comment_template": "第5問の正解は【14種類】！\nH、B、C、N、O、F、P、S、K、V、Y、I、W、Uの14種類。周期表から数えて確かめてみてね。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "2026年10月の確認時点。元素名ではなく「元素記号」の文字数を聞く。第4問は大文字A＋小文字u。",
+      "reference": "IUPAC｜公式の周期表"
+    },
+    {
+      "key": "quiz-v1-set-17",
+      "set_number": 17,
+      "version": 1,
+      "title": "音楽の常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-17-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "「ド・レ・ミ」の次の音は？",
+          "answer": "ファ"
+        },
+        {
+          "key": "quiz-v1-set-17-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "五線譜の横線は、何本？",
+          "answer": "5本"
+        },
+        {
+          "key": "quiz-v1-set-17-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "音楽の「テンポ」は、何のこと？",
+          "answer": "曲を演奏する速さ"
+        },
+        {
+          "key": "quiz-v1-set-17-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "1オクターブは、半音いくつ分？",
+          "answer": "12個分"
+        },
+        {
+          "key": "quiz-v1-set-17-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "標準的な88鍵のピアノ。黒い鍵盤は何鍵ある？",
+          "answer": "36鍵"
+        }
+      ],
+      "comment_template": "第5問の正解は【36鍵】！\n88鍵のピアノは、白鍵52鍵と黒鍵36鍵。白と黒が半分ずつ、というわけではありません。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第5問は必ず88鍵と指定。鍵盤数の違うキーボードや特殊なピアノは対象外。",
+      "reference": "MusicRadar｜標準的な88鍵ピアノの内訳"
+    },
+    {
+      "key": "quiz-v1-set-18",
+      "set_number": 18,
+      "version": 1,
+      "title": "スポーツの常識",
+      "questions": [
+        {
+          "key": "quiz-v1-set-18-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "普通のサッカーは、1チーム何人で試合を始める？",
+          "answer": "11人"
+        },
+        {
+          "key": "quiz-v1-set-18-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "通常のバスケットボールで、1チームから同時にコートに出るのは何人？",
+          "answer": "5人"
+        },
+        {
+          "key": "quiz-v1-set-18-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "野球で、守備につく選手は1チーム何人？",
+          "answer": "9人"
+        },
+        {
+          "key": "quiz-v1-set-18-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "フルマラソンの距離は、何キロメートル？",
+          "answer": "42.195キロメートル"
+        },
+        {
+          "key": "quiz-v1-set-18-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "競技用の羽根製バドミントンシャトル。羽根は何枚ついている？",
+          "answer": "16枚"
+        }
+      ],
+      "comment_template": "第5問の正解は【16枚】！\n羽根製の競技用シャトルは、16枚の羽根でできています。普段は速すぎて数えられないけれど、止めて見ると16枚！\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第2問は3×3ではなく通常の5人制。第5問はナイロン一体型などではなく羽根製を指定。",
+      "reference": "Shuttlecock｜規格・参考文献"
+    },
+    {
+      "key": "quiz-v1-set-19",
+      "set_number": 19,
+      "version": 1,
+      "title": "トランプとゲーム",
+      "questions": [
+        {
+          "key": "quiz-v1-set-19-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "トランプのマークは、全部で何種類？",
+          "answer": "4種類"
+        },
+        {
+          "key": "quiz-v1-set-19-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "ジョーカーを除いた普通のトランプは、全部で何枚？",
+          "answer": "52枚"
+        },
+        {
+          "key": "quiz-v1-set-19-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "普通のサイコロで、向かい合う面の目を足すと？",
+          "answer": "7"
+        },
+        {
+          "key": "quiz-v1-set-19-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "将棋盤のマスは、全部でいくつ？",
+          "answer": "81マス"
+        },
+        {
+          "key": "quiz-v1-set-19-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "トランプ52枚の数字を全部足すと？ A＝1、J＝11、Q＝12、K＝13とします。",
+          "answer": "364"
+        }
+      ],
+      "comment_template": "第5問の正解は【364】！\n1から13までを足すと91。同じ数字が4つのマークにあるので、91×4＝364です。ジョーカーは数えません。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第3問は標準的なサイコロ。第5問のA・J・Q・Kの数え方は、画面にも表示する。",
+      "reference": "計算問題：上の解説と出題メモで検算できます。"
+    },
+    {
+      "key": "quiz-v1-set-20",
+      "set_number": 20,
+      "version": 1,
+      "title": "季節と行事",
+      "questions": [
+        {
+          "key": "quiz-v1-set-20-q1",
+          "position": 1,
+          "level": "基本",
+          "text": "ひな祭りは、何月何日？",
+          "answer": "3月3日"
+        },
+        {
+          "key": "quiz-v1-set-20-q2",
+          "position": 2,
+          "level": "基本",
+          "text": "端午の節句は、何月何日？",
+          "answer": "5月5日"
+        },
+        {
+          "key": "quiz-v1-set-20-q3",
+          "position": 3,
+          "level": "基本",
+          "text": "一般に、七夕といえば何月何日？",
+          "answer": "7月7日"
+        },
+        {
+          "key": "quiz-v1-set-20-q4",
+          "position": 4,
+          "level": "やや難しい",
+          "text": "9月9日の「菊の節句」は、何の節句と呼ばれる？",
+          "answer": "重陽（ちょうよう）の節句"
+        },
+        {
+          "key": "quiz-v1-set-20-q5",
+          "position": 5,
+          "level": "超難問",
+          "text": "仙台七夕の「七つ飾り」で、商売繁盛を願って飾るものは？",
+          "answer": "巾着（きんちゃく）"
+        }
+      ],
+      "comment_template": "第5問の正解は【巾着（きんちゃく）】！\n仙台七夕の七つ飾りでは、巾着に商売繁盛などの願いを込めます。短冊は学問・書道、投網は豊漁・豊作を願う飾りです。\nみんなは何問正解？「○/5」で教えてね。",
+      "memo": "第3問は一般的な七夕の日。仙台七夕まつりの開催日を尋ねる問題ではない。",
+      "reference": "仙台七夕まつり公式｜七つ飾り"
+    }
+  ]
+}

@@ -31,7 +31,8 @@ const targetSchema = z.object({
 
 const commonSchema = z.object({
   requestKey: z.string().min(8).max(100).nullish(),
-  category: z.enum(['interview', 'self_pr', 'brand_video', 'daily_photo', 'other'], { error: '系統を選択してください。' }),
+  category: z.enum(['interview', 'self_pr', 'brand_video', 'daily_photo', 'other', 'quiz'], { error: '系統を選択してください。' }),
+  quizSetId: idStr('クイズセット').nullish(),
   otherLabel: optStr('内容名', 60),
   questionSetId: idStr('質問セット').nullish(),
   title: reqStr('タイトル', 120),
@@ -76,7 +77,7 @@ function resolveTarget(t: Target, label: string, now: Date) {
 async function assertRelations(
   q: Queryable,
   storeId: string,
-  p: { itemIds: string[]; castIds: string[]; questionSetId?: string | null },
+  p: { itemIds: string[]; castIds: string[]; questionSetId?: string | null; quizSetId?: string | null },
 ): Promise<void> {
   if (p.itemIds.length) {
     const r = await q.query<{ n: number }>(
@@ -92,6 +93,10 @@ async function assertRelations(
       [storeId, p.castIds],
     );
     if (r[0].n !== p.castIds.length) throw validation('この店舗に登録されていないキャストが含まれています。', { castIds: 'キャストの選択を確認してください。' });
+  }
+  if (p.quizSetId) {
+    const r = await q.query('SELECT 1 FROM quiz_sets WHERE id=$1', [p.quizSetId]);
+    if (!r.length) throw validation('クイズセットが正しくありません。', { quizSetId: 'クイズセットを選択してください。' });
   }
   if (p.questionSetId) {
     const r = await q.query('SELECT 1 FROM question_sets WHERE id=$1', [p.questionSetId]);
@@ -139,7 +144,7 @@ export async function createPosts(
         return { postIds: all.map((r) => r.id), groupId: ex[0].post_group_id, duplicate: true };
       }
     }
-    await assertRelations(q, storeId, { itemIds: v.itemIds, castIds: v.castIds, questionSetId: v.questionSetId });
+    await assertRelations(q, storeId, { itemIds: v.itemIds, castIds: v.castIds, questionSetId: v.questionSetId, quizSetId: v.quizSetId });
     const g = await q.query<{ id: string }>('SELECT gen_random_uuid() AS id');
     const groupId = g[0].id;
     const postIds: string[] = [];
@@ -157,6 +162,7 @@ export async function createPosts(
         ],
       );
       postIds.push(rows[0].id);
+      if (v.category === 'quiz' && v.quizSetId) await q.query('UPDATE posts SET quiz_set_id=$2 WHERE id=$1', [rows[0].id, v.quizSetId]);
       await replaceLinks(q, storeId, rows[0].id, v.itemIds, v.castIds);
     }
     return { postIds, groupId, duplicate: false };
@@ -178,7 +184,7 @@ export async function updatePost(db: Db, actor: Actor, storeId: string, postId: 
       [postId, storeId],
     );
     if (!cur[0]) throw notFound('投稿');
-    await assertRelations(q, storeId, { itemIds: v.itemIds, castIds: v.castIds, questionSetId: v.questionSetId });
+    await assertRelations(q, storeId, { itemIds: v.itemIds, castIds: v.castIds, questionSetId: v.questionSetId, quizSetId: v.quizSetId });
     // 予定日の履歴: 最初に予定として設定された日時を original_scheduled_at に保持する
     const scheduledAt = r.scheduledAt ?? (v.target.status === 'published' ? cur[0].scheduled_at : null);
     const original = cur[0].original_scheduled_at ?? scheduledAt ?? cur[0].scheduled_at;
@@ -192,6 +198,7 @@ export async function updatePost(db: Db, actor: Actor, storeId: string, postId: 
         scheduledAt, r.publishedAt, original, v.target.url, v.caption, v.memo, v.target.publicStateNote,
       ],
     );
+    await q.query('UPDATE posts SET quiz_set_id=$2 WHERE id=$1', [postId, v.category === 'quiz' ? (v.quizSetId ?? null) : null]);
     await replaceLinks(q, storeId, postId, v.itemIds, v.castIds);
   });
 }
@@ -217,6 +224,8 @@ export interface PostRow {
   other_label: string | null;
   question_set_id: string | null;
   set_label: string | null;
+  quiz_set_id: string | null;
+  quiz_label: string | null;
   title: string;
   platform: Platform;
   format: string | null;
@@ -238,7 +247,8 @@ export interface PostRow {
 
 const POST_SELECT = `
   p.id, p.post_group_id, p.category, p.other_label, p.question_set_id, p.title, p.platform, p.format, p.status,
-  p.scheduled_at, p.published_at, p.original_scheduled_at, p.url, p.caption, p.memo, p.public_state_note, p.created_at,
+  p.scheduled_at, p.published_at, p.original_scheduled_at, p.url, p.caption, p.memo, p.public_state_note, p.created_at, p.quiz_set_id,
+  (SELECT 'QUIZ ' || lpad(qz.set_number::text,2,'0') || '｜' || qz.title FROM quiz_sets qz WHERE qz.id=p.quiz_set_id) AS quiz_label,
   (SELECT 'SET ' || lpad(qs.set_number::text,2,'0') || '｜' || qs.title FROM question_sets qs WHERE qs.id=p.question_set_id) AS set_label,
   (SELECT count(*)::int FROM post_materials pm JOIN material_items i ON i.id=pm.item_id WHERE pm.post_id=p.id) AS material_count,
   coalesce((SELECT array_agg(c.display_name ORDER BY c.display_name) FROM post_casts pc JOIN casts c ON c.id=pc.cast_id WHERE pc.post_id=p.id), ARRAY[]::text[]) AS cast_names,
