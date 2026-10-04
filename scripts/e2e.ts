@@ -319,6 +319,21 @@ async function main() {
       await c.close();
     });
 
+    console.log('\n[素材のグリッド/詳細リスト]');
+    await t('素材一覧をグリッドと詳細リストで切り替えられる（グループ・個別素材とも）', async () => {
+      await page.goto(`${BASE}/s/b-club/materials`);
+      assert((await page.getByTestId('batch-list').count()) === 1, '既定は詳細リスト');
+      await page.getByTestId('layout-grid').click();
+      await page.getByTestId('batch-grid').waitFor();
+      assert((await page.getByTestId('batch-grid').locator('> li').count()) >= 2, 'グリッドにカードがない');
+      assert((await page.getByTestId('batch-grid').innerText()).includes('PR画像'), 'グリッドにタイトルがない');
+      await page.goto(`${BASE}/s/b-club/materials?view=items&layout=grid`);
+      await page.getByTestId('item-grid').waitFor();
+      assert((await page.getByTestId('item-grid').locator('> li').count()) >= 5, '個別素材のグリッド');
+      await page.getByTestId('layout-list').click();
+      await page.getByTestId('item-select-list').waitFor();
+    });
+
     console.log('\n[CSV]');
     await t('CSVは数式インジェクションを無害化する', async () => {
       await page.goto(`${BASE}/s/b-club/casts/new`);

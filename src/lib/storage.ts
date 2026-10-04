@@ -7,6 +7,8 @@ export interface StorageApi {
   createUploadUrl(path: string): Promise<string>;
   /** 閲覧用の署名付きURL（期限付き） */
   createDownloadUrl(path: string, expiresInSec?: number): Promise<string | null>;
+  /** 複数ファイルの閲覧用署名付きURLをまとめて取得（path → URL） */
+  createDownloadUrls(paths: string[], expiresInSec?: number): Promise<Record<string, string>>;
   remove(path: string): Promise<void>;
 }
 
@@ -38,6 +40,15 @@ export const supabaseStorage: StorageApi = {
     if (!r.ok) return null;
     const j = (await r.json()) as { signedURL: string };
     return `${base()}/storage/v1${j.signedURL}`;
+  },
+  async createDownloadUrls(paths, expiresInSec = 3600) {
+    const out: Record<string, string> = {};
+    if (!paths.length) return out;
+    const r = await call('POST', `/object/sign/${bucket()}`, { expiresIn: expiresInSec, paths });
+    if (!r.ok) return out;
+    const j = (await r.json()) as { path: string; signedURL: string | null }[];
+    for (const x of j) if (x.signedURL) out[x.path] = `${base()}/storage/v1${x.signedURL}`;
+    return out;
   },
   async remove(path) {
     await call('DELETE', `/object/${bucket()}`, { prefixes: [path] }).catch(() => {});

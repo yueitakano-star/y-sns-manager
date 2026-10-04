@@ -91,3 +91,22 @@ export async function listFiles(q: Queryable, actor: Actor, storeId: string, ite
     [storeId, itemIds],
   );
 }
+
+export interface CoverFile {
+  batch_id: string;
+  storage_path: string;
+  content_type: string;
+}
+
+/** 素材グループごとの代表ファイル（画像を優先して1つ）。グリッド表示用 */
+export async function listCoverFiles(q: Queryable, actor: Actor, storeId: string, batchIds: string[]): Promise<CoverFile[]> {
+  await requireRole(q, actor, storeId, 'viewer');
+  if (!batchIds.length) return [];
+  return q.query<CoverFile>(
+    `SELECT DISTINCT ON (i.batch_id) i.batch_id, f.storage_path, f.content_type
+       FROM material_files f JOIN material_items i ON i.id = f.item_id
+      WHERE f.store_id = $1 AND f.voided_at IS NULL AND i.voided_at IS NULL AND i.batch_id = ANY($2::uuid[])
+      ORDER BY i.batch_id, (f.content_type LIKE 'image/%') DESC, f.created_at`,
+    [storeId, batchIds],
+  );
+}
