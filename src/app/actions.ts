@@ -25,6 +25,7 @@ import { createPosts, updatePost, voidPost } from '@/lib/domain/posts';
 import type { Role } from '@/lib/constants';
 import { supabaseStorage } from '@/lib/storage';
 import { createArchiveLink, updateArchiveLink, voidArchiveLink } from '@/lib/domain/archive';
+import { importDriveItems, previewDriveImport } from '@/lib/domain/archive-import';
 import { requireRole } from '@/lib/access';
 import { checkAiRate, generateCaptions } from '@/lib/ai';
 import { prepareUpload, registerFile, removeFile } from '@/lib/domain/files';
@@ -295,5 +296,20 @@ export async function voidArchiveAction(storeKey: string, linkId: string, reason
   return run(async () => {
     const { db, user, store } = await ctx(storeKey);
     await voidArchiveLink(db, user, store.id, linkId, reason);
+  });
+}
+
+// ---------- ドライブのフォルダから過去素材を取り込み ----------
+export async function previewDriveImportAction(storeKey: string, input: { folderUrl: string; group: 'files' | 'subfolders' }) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return previewDriveImport(db, user, store.id, { folderUrl: String(input?.folderUrl ?? ''), group: input?.group === 'subfolders' ? 'subfolders' : 'files' });
+  });
+}
+
+export async function importDriveItemsAction(storeKey: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return importDriveItems(db, user, store.id, input);
   });
 }

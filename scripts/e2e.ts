@@ -2,6 +2,7 @@
 //   npm run build && npm run test:e2e
 import { spawn, type ChildProcess } from 'node:child_process';
 import http from 'node:http';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
@@ -49,6 +50,26 @@ function assert(cond: unknown, msg: string): asserts cond {
 }
 const norm = (s: string) => s.replace(/\s+/g, ' ');
 
+// Googleドライブ偽サーバー（本物のGoogleは呼ばない）。署名用のRSA鍵はこの場で生成
+const DRIVE_PORT = 3198;
+const driveKey = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString();
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+const dfile = (id: string, name: string, mimeType: string, extra: object = {}) => ({ id, name, mimeType, createdTime: '2025-05-01T03:00:00.000Z', webViewLink: `https://drive.google.com/${mimeType.includes('folder') ? 'drive/folders' : 'file/d'}/${id}`, ...extra });
+const driveStub = http.createServer((req, res) => {
+  const url = new URL(req.url ?? '/', `http://localhost:${DRIVE_PORT}`);
+  const json = (o: unknown) => { res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(o)); };
+  if (url.pathname === '/token') return json({ access_token: 'tok', expires_in: 3600 });
+  if (url.pathname.startsWith('/thumb')) { res.setHeader('Content-Type', 'image/png'); res.end(PNG); return; }
+  if (url.pathname.startsWith('/drive/v3/files/')) return json(dfile('E2EROOTFOLDER000000001', '2025 B-club', 'application/vnd.google-apps.folder'));
+  if (url.pathname === '/drive/v3/files') {
+    const q = url.searchParams.get('q') ?? '';
+    if (q.includes('E2EROOTFOLDER000000001')) return json({ files: [dfile('E2EFOLDERASUKA00000001', 'Aさん 春撮影', 'application/vnd.google-apps.folder'), dfile('E2EFOLDERMISC000000002', '雑多', 'application/vnd.google-apps.folder'), dfile('E2EFILELOOSE0000000003', 'x.png', 'image/png', { thumbnailLink: `http://localhost:${DRIVE_PORT}/thumb=s220` })] });
+    return json({ files: [dfile('E2EKID0000000000000001', 'k.jpg', 'image/jpeg', { thumbnailLink: `http://localhost:${DRIVE_PORT}/thumb=s220` })] });
+  }
+  res.statusCode = 404;
+  res.end('{}');
+});
+
 async function setup() {
   fs.rmSync(DATA, { recursive: true, force: true });
   process.env.PGLITE_DIR = DATA;
@@ -65,7 +86,7 @@ async function setup() {
 function startServer(): Promise<ChildProcess> {
   const nextBin = path.resolve('node_modules/next/dist/bin/next');
   const p = spawn(process.execPath, [nextBin, 'start', '-p', String(PORT)], {
-    env: { ...process.env, PGLITE_DIR: DATA, COOKIE_SECURE: 'false', NODE_ENV: 'production', GEMINI_API_KEY: 'stub-key', GEMINI_BASE_URL: `http://localhost:${GEMINI_PORT}` },
+    env: { ...process.env, PGLITE_DIR: DATA, COOKIE_SECURE: 'false', NODE_ENV: 'production', GEMINI_API_KEY: 'stub-key', GEMINI_BASE_URL: `http://localhost:${GEMINI_PORT}`, GOOGLE_SERVICE_ACCOUNT_JSON: JSON.stringify({ client_email: 'e2e-robot@proj.iam.gserviceaccount.com', private_key: driveKey }), GOOGLE_DRIVE_API_BASE: `http://localhost:${DRIVE_PORT}`, GOOGLE_TOKEN_URL: `http://localhost:${DRIVE_PORT}/token` },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   p.stderr?.on('data', (d) => process.stderr.write(`[server] ${d}`));
@@ -96,6 +117,7 @@ async function statText(page: Page, testid: string, label: string): Promise<stri
 async function main() {
   await setup();
   await new Promise<void>((r) => geminiStub.listen(GEMINI_PORT, r));
+  await new Promise<void>((r) => driveStub.listen(DRIVE_PORT, r));
   const server = await startServer();
   const browser: Browser = await chromium.launch({ channel: 'msedge', headless: true });
   let ctx: BrowserContext | undefined;
@@ -471,6 +493,34 @@ async function main() {
       assert(!(await page.locator('body').innerText()).includes('2025春 撮影まとめ'), '他店舗に表示された');
     });
 
+    console.log('\n[ドライブのフォルダ取り込み（偽Googleサーバー）]');
+    await t('フォルダを読み取り→キャスト推定を確認→取り込み→サムネ付きで一覧表示→再読み取りは取り込み済み', async () => {
+      await page.goto(`${BASE}/s/b-club/archive/import`);
+      assert((await page.getByTestId('di-mail').innerText()).includes('e2e-robot@proj.iam.gserviceaccount.com'), '共有先アドレスが出ない');
+      await page.getByLabel(/^Googleドライブのフォルダ/).fill('https://drive.google.com/drive/folders/E2EROOTFOLDER000000001');
+      await page.getByTestId('di-read').click();
+      await page.getByTestId('di-preview').waitFor();
+      const rows = page.getByTestId('di-rows').locator('> li');
+      assert((await rows.count()) === 3, '読み取り結果が3件でない');
+      const first = rows.first();
+      assert((await first.getByRole('combobox', { name: '出演キャスト' }).locator('option:checked').innerText()).includes('Aさん'), 'フォルダ名からキャストを推定できていない');
+      await page.getByTestId('di-import').click();
+      await page.getByTestId('di-result').waitFor();
+      assert((await page.getByTestId('di-result').innerText()).includes('3件を取り込みました'), '取り込み結果');
+      await page.goto(`${BASE}/s/b-club/archive`);
+      const items = page.getByTestId('archive-list').locator('> li');
+      assert((await items.count()) >= 3, '一覧に出ない');
+      const img = page.getByTestId('archive-list').locator('img').first();
+      await img.waitFor();
+      await page.waitForFunction((el) => (el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth > 0, await img.elementHandle());
+      await page.goto(`${BASE}/s/b-club/archive/import`);
+      await page.getByLabel(/^Googleドライブのフォルダ/).fill('E2EROOTFOLDER000000001');
+      await page.getByTestId('di-read').click();
+      await page.getByTestId('di-preview').waitFor();
+      assert((await page.getByTestId('di-rows').innerText()).includes('取り込み済み'), '再読み取りで取り込み済みにならない');
+      assert(await page.getByTestId('di-import').isDisabled(), '取り込み済みのみなのに取り込みボタンが有効');
+    });
+
     console.log('\n[CSV]');
     await t('CSVは数式インジェクションを無害化する', async () => {
       await page.goto(`${BASE}/s/b-club/casts/new`);
@@ -567,6 +617,7 @@ async function main() {
     await browser.close().catch(() => {});
     server.kill();
     geminiStub.close();
+    driveStub.close();
   }
   const failed = results.filter((r) => !r.ok);
   console.log(`\n結果: ${results.length - failed.length}/${results.length} 合格`);

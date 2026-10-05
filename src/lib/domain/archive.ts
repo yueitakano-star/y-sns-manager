@@ -37,13 +37,15 @@ export interface ArchiveRow {
   description: string | null;
   shot_on: string | null;
   purpose: 'sns' | 'ad' | 'other' | null;
+  source: 'manual' | 'drive';
+  mime_type: string | null;
   created_at: string;
   cast_ids: string[];
   cast_names: string[];
 }
 
 const SELECT = `
-  l.id, l.title, l.url, l.description, l.shot_on::text AS shot_on, l.purpose, l.created_at,
+  l.id, l.title, l.url, l.description, l.shot_on::text AS shot_on, l.purpose, l.source, l.mime_type, l.created_at,
   coalesce((SELECT array_agg(c.id ORDER BY c.display_name) FROM archive_link_casts lc JOIN casts c ON c.id=lc.cast_id WHERE lc.link_id=l.id), ARRAY[]::uuid[]) AS cast_ids,
   coalesce((SELECT array_agg(c.display_name ORDER BY c.display_name) FROM archive_link_casts lc JOIN casts c ON c.id=lc.cast_id WHERE lc.link_id=l.id), ARRAY[]::text[]) AS cast_names`;
 
