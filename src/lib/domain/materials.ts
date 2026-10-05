@@ -726,3 +726,23 @@ export async function createQuickUpload(
   }
   return { batches };
 }
+
+const bulkStatusSchema = z.object({
+  itemIds: z.array(idStr('個別素材')).min(1, '素材を選択してください。').max(500),
+  status: z.enum(STATUSES, { error: '作業状態を選択してください。' }),
+});
+
+/** 選択した個別素材の作業状態をまとめて切り替える（回答履歴・投稿の実績には影響しない） */
+export async function updateItemsStatus(db: Db, actor: Actor, storeId: string, input: unknown): Promise<number> {
+  await requireRole(db, actor, storeId, 'editor');
+  const v = parseInput(bulkStatusSchema, input);
+  const ids = unique(v.itemIds);
+  const rows = await db.query(
+    `UPDATE material_items i SET status=$3, updated_at=now()
+      FROM material_batches b
+      WHERE i.batch_id=b.id AND i.store_id=$1 AND i.id = ANY($2::uuid[]) AND i.voided_at IS NULL AND b.voided_at IS NULL RETURNING i.id`,
+    [storeId, ids, v.status],
+  );
+  if (rows.length !== ids.length) throw notFound('個別素材');
+  return rows.length;
+}

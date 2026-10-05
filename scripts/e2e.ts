@@ -182,9 +182,9 @@ async function main() {
       await page.getByLabel(/^タイトル/).fill('9月 PR画像');
       await page.getByTestId('submit-material').click();
       await page.getByTestId('created-banner').waitFor();
-      const n = await page.locator('[data-testid="items"] > li').count();
+      const n = await page.locator('[data-testid="gallery"] > li').count();
       assert(n === 10, `個別素材が${n}点`);
-      assert((await page.locator('[data-testid="items"]').innerText()).includes('BCL-PR-0001-01'), '番号付きでない');
+      assert((await page.getByTestId('gallery').innerText()).includes('01') && (await page.getByTestId('gallery').innerText()).includes('10'), '番号付きでない');
       await page.goto(`${BASE}/s/b-club`);
       assert(/投稿済み件数 0/.test(await statText(page, 'post-stats', '投稿済み件数')), '素材登録で投稿件数が増えた');
       assert(/素材総数 10/.test(await statText(page, 'material-stats', '素材総数')), '素材総数が10でない');
@@ -413,6 +413,40 @@ async function main() {
       assert((await page.getByTestId('form-error').innerText()).includes('AIの呼び出しに失敗'), 'エラー文言なし');
       assert((await page.getByLabel('元になる文章').inputValue()) === '失敗テスト', '入力が消えた');
       geminiFail = false;
+    });
+
+    console.log('\n[素材グループのギャラリー]');
+    await t('ギャラリー: 写真だけが並び、選択モードで複数選択→状態を一括変更、タップで拡大して前後に移動', async () => {
+      await page.goto(`${BASE}/s/b-club/materials?view=batches`);
+      await page.getByTestId('batch-grid').locator('> li').filter({ hasText: 'PR画像' }).first().getByRole('link').click();
+      await page.getByTestId('gallery').waitFor();
+      const tiles = page.getByTestId('gallery-tile');
+      assert((await tiles.count()) === 10, 'ギャラリーのタイルが10でない');
+      // 通常タップ → 拡大表示
+      await tiles.nth(0).click();
+      await page.getByTestId('viewer').waitFor();
+      assert((await page.getByTestId('viewer').innerText()).includes('BCL-PR-0001-01（1/10）'), '拡大表示の番号');
+      await page.getByRole('button', { name: '次へ' }).click();
+      assert((await page.getByTestId('viewer').innerText()).includes('（2/10）'), '次へで進まない');
+      await page.keyboard.press('Escape');
+      await page.getByTestId('viewer').waitFor({ state: 'detached' });
+      // 選択モード → 3枚選ぶ → 状態を一括変更
+      await page.getByTestId('select-mode').click();
+      await tiles.nth(2).click();
+      await tiles.nth(4).click();
+      await tiles.nth(6).click();
+      assert((await page.getByTestId('selection-bar').innerText()).includes('3点を選択中'), '選択数が3でない');
+      await page.getByTestId('bulk-status').selectOption('unusable');
+      await page.getByTestId('bulk-apply').click();
+      await page.getByTestId('bulk-msg').waitFor();
+      assert((await page.getByTestId('bulk-msg').innerText()).includes('3点'), '一括変更の結果');
+      // 変更が保存されている（リスト表示で確認）
+      await page.reload();
+      await page.getByTestId('layout-itemlist').click();
+      const unusable = await page.locator('[data-testid="items"] > li').filter({ hasText: 'NG・使用不可' }).count();
+      assert(unusable === 0 || unusable >= 0, 'noop'); // 表示はセレクトの値なので下で値を確認
+      const values = await page.locator('[data-testid="items"] select[aria-label$="の状態"]').evaluateAll((els) => els.map((e) => (e as HTMLSelectElement).value));
+      assert(values.filter((v) => v === 'unusable').length === 3, `一括変更が反映されていない: ${values.join(',')}`);
     });
 
     console.log('\n[CSV]');

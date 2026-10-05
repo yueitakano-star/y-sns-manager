@@ -12,6 +12,7 @@ import {
   markAllAnswered,
   setAnswer,
   updateBatch,
+  updateItemsStatus,
   voidBatch,
   voidItems,
 } from '../src/lib/domain/materials';
@@ -533,5 +534,21 @@ describe('用途', () => {
     expect(by.sns).toMatchObject({ total: 3, used: 1, unused: 2, ready: 2 });
     expect(by.ad).toMatchObject({ total: 3, used: 0, unused: 3 });
     expect(by.none).toMatchObject({ total: 1 });
+  });
+});
+
+describe('状態の一括変更', () => {
+  it('選択した個別素材の状態をまとめて変更できる。他店舗・取消済み・閲覧専用は不可', async () => {
+    const a = await cast('Aさん');
+    const b = await prPhotos(a.id, 4);
+    const its = await items(b.batchId);
+    expect(await updateItemsStatus(env.db, env.editorB, B, { itemIds: its.slice(0, 3).map((i) => i.id), status: 'unusable' })).toBe(3);
+    const after = await items(b.batchId);
+    expect(after.map((i) => i.status)).toEqual(['unusable', 'unusable', 'unusable', 'ready']);
+    await rejects(updateItemsStatus(env.db, env.viewerB, B, { itemIds: [its[0].id], status: 'ready' }), 'forbidden');
+    await rejects(updateItemsStatus(env.db, env.admin, K, { itemIds: [its[0].id], status: 'ready' }), 'not_found');
+    await rejects(updateItemsStatus(env.db, env.admin, B, { itemIds: [], status: 'ready' }), 'validation');
+    await voidItems(env.db, env.admin, B, { itemIds: [its[3].id], reason: 'x' });
+    await rejects(updateItemsStatus(env.db, env.admin, B, { itemIds: [its[3].id], status: 'ready' }), 'not_found');
   });
 });

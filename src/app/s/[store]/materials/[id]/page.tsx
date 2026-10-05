@@ -26,6 +26,10 @@ export default async function MaterialDetail({ params, searchParams }: { params:
   const today = jstToday();
   const fileRows = await listFiles(db, user, store.id, b.items.map((i) => i.id));
   const urls = await Promise.all(fileRows.map((f) => (supabaseStorage.configured() ? supabaseStorage.createDownloadUrl(f.storage_path) : Promise.resolve(null))));
+  // ギャラリー用: 個別素材ごとに代表ファイル(画像優先)の縮小サムネイルを用意
+  const firstFile = new Map<string, { path: string; type: string }>();
+  for (const f of fileRows) { const cur = firstFile.get(f.item_id); if (!cur || (f.content_type.startsWith('image/') && !cur.type.startsWith('image/'))) firstFile.set(f.item_id, { path: f.storage_path, type: f.content_type }); }
+  const thumbUrls = supabaseStorage.configured() && firstFile.size ? await supabaseStorage.createThumbUrls([...firstFile.values()].map((x) => ({ path: x.path, type: x.type }))) : {};
   const filesByItem = new Map<string, { id: string; file_name: string; content_type: string; size_bytes: number; url: string | null }[]>();
   fileRows.forEach((f, i) => filesByItem.set(f.item_id, [...(filesByItem.get(f.item_id) ?? []), { id: f.id, file_name: f.file_name, content_type: f.content_type, size_bytes: Number(f.size_bytes), url: urls[i] }]));
   const castNames = [...new Set(b.items.flatMap((i) => i.cast_names))];
@@ -84,7 +88,7 @@ export default async function MaterialDetail({ params, searchParams }: { params:
         editable={editable}
         storageReady={supabaseStorage.configured()}
         castOptions={casts.map((c) => ({ id: c.id, name: c.display_name }))}
-        items={b.items.map((i) => ({ id: i.id, code: i.code, status: i.status, memo: i.memo ?? '', published_count: i.published_count, scheduled_count: i.scheduled_count, cast_names: i.cast_names, files: filesByItem.get(i.id) ?? [], derived_from_code: i.derived_from_item_id ? (codeById.get(i.derived_from_item_id) ?? null) : null }))}
+        items={b.items.map((i) => ({ id: i.id, code: i.code, status: i.status, memo: i.memo ?? '', published_count: i.published_count, scheduled_count: i.scheduled_count, cast_names: i.cast_names, files: filesByItem.get(i.id) ?? [], thumb: firstFile.get(i.id) && thumbUrls[firstFile.get(i.id)!.path] ? { url: thumbUrls[firstFile.get(i.id)!.path], type: firstFile.get(i.id)!.type } : null, derived_from_code: i.derived_from_item_id ? (codeById.get(i.derived_from_item_id) ?? null) : null }))}
       />
       {b.voidedItems.length ? (
         <p className="mt-2 text-xs text-slate-500">取消済みの個別素材（集計から除外・番号は再利用しません）: {b.voidedItems.map((i) => i.code).join('、')}</p>

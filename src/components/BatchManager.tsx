@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   addItemsAction,
+  bulkItemStatusAction,
   createDerivedAction,
   markAllAnsweredAction,
   setAnswerAction,
@@ -18,6 +19,7 @@ import { removeFileAction } from '@/app/actions';
 import { ErrorBanner, Field, SuccessBanner, toNum, useSubmitter } from './forms';
 import { uploadOne } from './uploader';
 import { downloadAll, withDownload } from '@/lib/download';
+import { ItemGallery, Viewer } from './Gallery';
 
 export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string; purpose: string }; today: string; showOtherLabel: boolean }) {
   const router = useRouter();
@@ -84,6 +86,7 @@ export interface ItemView {
   cast_names: string[];
   derived_from_code: string | null;
   files: { id: string; file_name: string; content_type: string; size_bytes: number; url: string | null }[];
+  thumb: { url: string; type: string } | null;
 }
 
 function ItemRow({ storeKey, item, selected, onToggle, canUpload }: { storeKey: string; item: ItemView; selected: boolean; onToggle: () => void; canUpload: boolean }) {
@@ -136,22 +139,69 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
   const postHref = `${base}/posts/new?${sel.map((id) => `item=${id}`).join('&')}`;
   const selFiles = items.filter((i) => sel.includes(i.id)).flatMap((i) => i.files.filter((f) => f.url).map((f) => ({ url: f.url as string, name: f.file_name })));
   const [dlBusy, setDlBusy] = useState(false);
+  const [layout, setLayout] = useState<'gallery' | 'list'>('gallery');
+  const [selectMode, setSelectMode] = useState(false);
+  const [viewer, setViewer] = useState<number | null>(null);
+  const [bulkStatus, setBulkStatus] = useState<MaterialStatus>('ready');
+  const bulk = useSubmitter();
+  const [bulkMsg, setBulkMsg] = useState<string | null>(null);
 
   return (
     <div>
       {editable ? <BulkUpload storeKey={storeKey} items={items} storageReady={storageReady} /> : null}
-      <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white" data-testid="items">
-        {items.map((it) => (<ItemRow key={it.id} storeKey={storeKey} item={it} selected={sel.includes(it.id)} onToggle={() => toggle(it.id)} canUpload={editable && storageReady} />))}
-      </ul>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button type="button" className="btn-sub" onClick={() => setSel(sel.length === items.length ? [] : items.map((i) => i.id))}>{sel.length === items.length ? '選択を解除' : 'すべて選択'}</button>
-        {editable ? (
-          sel.length ? <>
-            <Link className="btn-post" href={postHref}>選択した{sel.length}点で投稿登録 →</Link>
-            {selFiles.length ? <button type="button" className="btn-mat" disabled={dlBusy} data-testid="download-selected" onClick={async () => { setDlBusy(true); await downloadAll(selFiles); setDlBusy(false); }}>{dlBusy ? '保存中…' : `⬇ 選択した${selFiles.length}件のファイルを保存`}</button> : null}
-          </> : <span className="text-sm text-slate-500">チェックした素材で投稿登録に進めます。</span>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1" role="group" aria-label="表示形式">
+          <button type="button" className={layout === 'gallery' ? 'btn-primary !min-h-9' : 'btn-sub !min-h-9'} aria-pressed={layout === 'gallery'} onClick={() => setLayout('gallery')} data-testid="layout-gallery">▦ ギャラリー</button>
+          <button type="button" className={layout === 'list' ? 'btn-primary !min-h-9' : 'btn-sub !min-h-9'} aria-pressed={layout === 'list'} onClick={() => setLayout('list')} data-testid="layout-itemlist">☰ リスト</button>
+        </div>
+        {layout === 'gallery' ? (
+          <button type="button" className={selectMode ? 'btn-mat !min-h-9' : 'btn-sub !min-h-9'} aria-pressed={selectMode} onClick={() => { setSelectMode((m) => !m); if (selectMode) setSel([]); }} data-testid="select-mode">
+            {selectMode ? 'キャンセル' : '選択'}
+          </button>
         ) : null}
       </div>
+      {layout === 'gallery' ? (
+        <ItemGallery
+          items={items}
+          selected={sel}
+          selectMode={selectMode}
+          onTile={(i) => { if (selectMode) toggle(items[i].id); else setViewer(i); }}
+        />
+      ) : (
+        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white" data-testid="items">
+          {items.map((it) => (<ItemRow key={it.id} storeKey={storeKey} item={it} selected={sel.includes(it.id)} onToggle={() => toggle(it.id)} canUpload={editable && storageReady} />))}
+        </ul>
+      )}
+      {viewer != null ? <Viewer storeKey={storeKey} base={base} items={items} index={viewer} editable={editable} onClose={() => setViewer(null)} onIndex={setViewer} /> : null}
+      {layout === 'list' || selectMode ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button type="button" className="btn-sub" onClick={() => setSel(sel.length === items.length ? [] : items.map((i) => i.id))}>{sel.length === items.length ? '選択を解除' : 'すべて選択'}</button>
+          {!sel.length ? <span className="text-sm text-slate-500">素材を選ぶと、保存・状態の変更・投稿登録ができます。</span> : null}
+        </div>
+      ) : null}
+      {sel.length ? (
+        <div className="sticky bottom-16 z-20 mt-3 space-y-2 rounded-xl border-2 border-slate-800 bg-white p-3 shadow-lg md:bottom-2" data-testid="selection-bar">
+          <p className="text-sm font-bold">{sel.length}点を選択中{usedSel.length ? <span className="ml-2 font-normal text-slate-500">（投稿に紐付き{usedSel.length}点）</span> : null}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {selFiles.length ? <button type="button" className="btn-mat" disabled={dlBusy} data-testid="download-selected" onClick={async () => { setDlBusy(true); await downloadAll(selFiles); setDlBusy(false); }}>{dlBusy ? '保存中…' : `⬇ ${selFiles.length}件を保存`}</button> : null}
+            {editable ? (
+              <>
+                <select aria-label="変更後の状態" className="input !w-auto" value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as MaterialStatus)} data-testid="bulk-status">
+                  {MATERIAL_STATES.map((s) => (<option key={s.key} value={s.key}>{s.name}</option>))}
+                </select>
+                <button type="button" className="btn-sub" disabled={bulk.busy} data-testid="bulk-apply"
+                  onClick={() => { setBulkMsg(null); void bulk.submit(() => bulkItemStatusAction(storeKey, { itemIds: sel, status: bulkStatus }), (n) => { setBulkMsg(`${n}点の状態を変更しました。`); router.refresh(); }); }}>
+                  {bulk.busy ? '変更中…' : '状態を変更'}
+                </button>
+                <Link className="btn-post" href={postHref}>投稿登録 →</Link>
+              </>
+            ) : null}
+            <button type="button" className="btn-sub" onClick={() => { setSel([]); setSelectMode(false); }}>選択をやめる</button>
+          </div>
+          {bulkMsg ? <p role="status" className="text-sm text-emerald-700" data-testid="bulk-msg">{bulkMsg}</p> : null}
+          <ErrorBanner message={bulk.error} />
+        </div>
+      ) : null}
 
       {editable ? (
         <div className="mt-4 space-y-3">

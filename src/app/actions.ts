@@ -17,6 +17,7 @@ import {
   setAnswer,
   updateBatch,
   updateItem,
+  updateItemsStatus,
   voidBatch,
   voidItems,
 } from '@/lib/domain/materials';
@@ -264,5 +265,12 @@ export async function generateCaptionAction(storeKey: string, input: unknown) {
     await requireRole(db, user, store.id, 'editor');
     checkAiRate(user.userId);
     return generateCaptions(input, store.name);
+  });
+}
+
+export async function bulkItemStatusAction(storeKey: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return updateItemsStatus(db, user, store.id, input);
   });
 }
