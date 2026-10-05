@@ -78,7 +78,7 @@ export async function generateCaptions(input: unknown, storeName: string, fetchI
     const first = parsed.error.issues[0];
     throw new AppError('validation', first?.message ?? '入力内容を確認してください。', { draft: first?.message ?? '' });
   }
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
   let res: Response;
   try {
     res = await fetchImpl(`${process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com'}/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -87,7 +87,7 @@ export async function generateCaptions(input: unknown, storeName: string, fetchI
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
         contents: [{ role: 'user', parts: [{ text: buildPrompt(parsed.data, storeName) }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 2048 },
+        generationConfig: { responseMimeType: 'application/json', temperature: 0.9, maxOutputTokens: 8192 },
       }),
       signal: AbortSignal.timeout(40_000),
       cache: 'no-store',

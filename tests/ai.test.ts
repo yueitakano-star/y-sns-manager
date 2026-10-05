@@ -14,7 +14,7 @@ describe('AIキャプション（Gemini）', () => {
     const r = await generateCaptions({ platform: 'instagram', draft: '新メニューのカルビ', tone: 'energetic', castNames: ['アスカ'], title: '新作' }, '焼肉En', f as unknown as typeof fetch);
     expect(r).toEqual([{ label: '元気め', caption: '今日もがんばります！ #焼肉' }, { label: '上品', caption: 'ご来店をお待ちしております。' }]);
     const [url, init] = f.mock.calls[0];
-    expect(String(url)).toContain('gemini-2.5-flash:generateContent');
+    expect(String(url)).toContain('gemini-3.8-flash:generateContent');
     expect(String(url)).not.toContain('test-key');
     expect((init.headers as Record<string, string>)['x-goog-api-key']).toBe('test-key');
     const body = JSON.parse(init.body as string);
