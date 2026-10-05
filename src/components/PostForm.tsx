@@ -21,6 +21,7 @@ import {
 } from '@/lib/constants';
 import { toJstLocal } from '@/lib/jst';
 import { ErrorBanner, Field, newRequestKey, useSubmitter } from './forms';
+import { AiCaptionAssist, CaptionPreview } from './AiCaptionAssist';
 
 export interface PickItem {
   id: string;
@@ -68,9 +69,10 @@ export interface PostInitial {
 
 const nowJst = () => toJstLocal(new Date().toISOString());
 
-export function PostForm({ storeKey, storeName, casts, items, sets, quizzes, mode, postId, initial, defaultItemIds, defaultCastId, defaultCategory, defaultQuizSetId }: {
+export function PostForm({ storeKey, storeName, aiReady, casts, items, sets, quizzes, mode, postId, initial, defaultItemIds, defaultCastId, defaultCategory, defaultQuizSetId }: {
   storeKey: string;
   storeName: string;
+  aiReady: boolean;
   casts: { id: string; name: string; active: boolean }[];
   items: PickItem[];
   sets: SetInfo[];
@@ -169,6 +171,8 @@ export function PostForm({ storeKey, storeName, casts, items, sets, quizzes, mod
   }
 
   const cls = (k: string) => `input ${fields[k] ? 'input-error' : ''}`;
+  const aiPlatform: Platform = mode === 'edit' ? platform : ((Object.keys(targets) as Platform[]).find((p) => targets[p].enabled) ?? 'instagram');
+  const aiCastNames = castIds.map((id) => casts.find((c) => c.id === id)?.name).filter(Boolean) as string[];
 
   const targetFields = (key: Platform | null, t: Omit<TargetState, 'enabled'>, set: (patch: Partial<Omit<TargetState, 'enabled'>>) => void, label: string) => {
     const ef = tFields(key);
@@ -358,7 +362,9 @@ export function PostForm({ storeKey, storeName, casts, items, sets, quizzes, mod
 
       <fieldset className="card space-y-3">
         <legend className="px-1 text-sm font-bold text-post-700">5. キャプション・メモ（任意）</legend>
-        <Field label="キャプション" htmlFor="caption" error={fields.caption}><textarea id="caption" rows={4} className={cls('caption')} value={caption} onChange={(e) => setCaption(e.target.value)} /></Field>
+        <AiCaptionAssist storeKey={storeKey} ready={aiReady} platform={aiPlatform} category={POST_CATEGORIES.find((c) => c.key === category)?.name ?? ''} title={title} castNames={aiCastNames} currentCaption={caption} onApply={setCaption} />
+        <Field label="キャプション" htmlFor="caption" error={fields.caption}><textarea id="caption" rows={6} className={cls('caption')} value={caption} onChange={(e) => setCaption(e.target.value)} /></Field>
+        <CaptionPreview platform={aiPlatform} caption={caption} title={title} />
         <Field label="メモ" htmlFor="memo" error={fields.memo}><textarea id="memo" rows={2} className={cls('memo')} value={memo} onChange={(e) => setMemo(e.target.value)} /></Field>
       </fieldset>
 

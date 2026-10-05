@@ -23,6 +23,8 @@ import {
 import { createPosts, updatePost, voidPost } from '@/lib/domain/posts';
 import type { Role } from '@/lib/constants';
 import { supabaseStorage } from '@/lib/storage';
+import { requireRole } from '@/lib/access';
+import { checkAiRate, generateCaptions } from '@/lib/ai';
 import { prepareUpload, registerFile, removeFile } from '@/lib/domain/files';
 
 export type ActionResult<T = void> =
@@ -252,5 +254,15 @@ export async function quickUploadAction(storeKey: string, input: unknown) {
   return run(async () => {
     const { db, user, store } = await ctx(storeKey);
     return createQuickUpload(db, user, store.id, input);
+  });
+}
+
+// ---------- AIキャプション ----------
+export async function generateCaptionAction(storeKey: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    await requireRole(db, user, store.id, 'editor');
+    checkAiRate(user.userId);
+    return generateCaptions(input, store.name);
   });
 }

@@ -9,6 +9,7 @@ import { AppError } from '@/lib/errors';
 import { toJstLocal } from '@/lib/jst';
 import { PageHeader } from '@/components/ui';
 import { PostForm } from '@/components/PostForm';
+import { aiConfigured } from '@/lib/ai';
 
 export default async function EditPost({ params }: { params: Promise<{ store: string; id: string }> }) {
   const { id } = await params;
@@ -25,6 +26,7 @@ export default async function EditPost({ params }: { params: Promise<{ store: st
       <PostForm
         storeKey={store.key}
         storeName={store.name}
+        aiReady={aiConfigured()}
         mode="edit"
         postId={p.id}
         casts={casts.map((c) => ({ id: c.id, name: c.display_name, active: c.status === 'active' }))}

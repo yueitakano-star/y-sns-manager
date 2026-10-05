@@ -13,6 +13,7 @@ export async function GET() {
     storage: supabaseStorage.configured() ? 'アップロード設定あり' : '未設定',
     supabaseUrlSet: !!process.env.SUPABASE_URL,
     serviceKeySet: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    aiConfigured: !!process.env.GEMINI_API_KEY,
     noAuth: process.env.NO_AUTH === 'true',
     cookieSecure: process.env.COOKIE_SECURE === 'true',
     vercelEnv: process.env.VERCEL_ENV ?? null,

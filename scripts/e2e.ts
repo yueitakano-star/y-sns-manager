@@ -1,6 +1,7 @@
 // UI受け入れテスト（実ブラウザ）。別DB(.data/e2e)で本番ビルドを起動し、Edge(Chromium)で操作する。
 //   npm run build && npm run test:e2e
 import { spawn, type ChildProcess } from 'node:child_process';
+import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
@@ -8,6 +9,25 @@ import { createDb, migrate, seedMaster } from '../src/lib/db';
 import { createUser } from '../src/lib/auth';
 
 const PORT = 3101;
+const GEMINI_PORT = 3199;
+// Gemini偽サーバー（本物のAPIは呼ばない）
+const geminiCalls: { key: string; body: string }[] = [];
+let geminiFail = false;
+const geminiStub = http.createServer((req, res) => {
+  let body = '';
+  req.on('data', (c) => (body += c));
+  req.on('end', () => {
+    geminiCalls.push({ key: String(req.headers['x-goog-api-key'] ?? ''), body });
+    res.setHeader('Content-Type', 'application/json');
+    if (geminiFail) {
+      res.statusCode = 429;
+      res.end(JSON.stringify({ error: { message: 'quota exceeded (stub)' } }));
+      return;
+    }
+    const candidates = [1, 2, 3].map((i) => ({ label: `スタブ${i}`, caption: `スタブ案${i}：新メニューのカルビ！ #焼肉` }));
+    res.end(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ candidates }) }] } }] }));
+  });
+});
 const BASE = `http://localhost:${PORT}`;
 const DATA = path.resolve('.data/e2e');
 const results: { name: string; ok: boolean; err?: string }[] = [];
@@ -45,7 +65,7 @@ async function setup() {
 function startServer(): Promise<ChildProcess> {
   const nextBin = path.resolve('node_modules/next/dist/bin/next');
   const p = spawn(process.execPath, [nextBin, 'start', '-p', String(PORT)], {
-    env: { ...process.env, PGLITE_DIR: DATA, COOKIE_SECURE: 'false', NODE_ENV: 'production' },
+    env: { ...process.env, PGLITE_DIR: DATA, COOKIE_SECURE: 'false', NODE_ENV: 'production', GEMINI_API_KEY: 'stub-key', GEMINI_BASE_URL: `http://localhost:${GEMINI_PORT}` },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   p.stderr?.on('data', (d) => process.stderr.write(`[server] ${d}`));
@@ -75,6 +95,7 @@ async function statText(page: Page, testid: string, label: string): Promise<stri
 
 async function main() {
   await setup();
+  await new Promise<void>((r) => geminiStub.listen(GEMINI_PORT, r));
   const server = await startServer();
   const browser: Browser = await chromium.launch({ channel: 'msedge', headless: true });
   let ctx: BrowserContext | undefined;
@@ -368,6 +389,32 @@ async function main() {
       assert(/投稿済み 1回/.test(await page.getByTestId('quiz-sets').locator('> li').first().innerText()), '一覧に投稿済みが出ない');
     });
 
+    console.log('\n[AIキャプション（Gemini偽サーバーで動作確認）]');
+    await t('AIで案を作り、確認して採用→キャプション欄とプレビューに反映。送信内容にキーは含まれない', async () => {
+      await page.goto(`${BASE}/s/b-club/posts/new`);
+      await page.getByTestId('ai-open').click();
+      await page.getByLabel('元になる文章').fill('新メニューのカルビが出ました');
+      await page.getByTestId('ai-generate').click();
+      await page.getByTestId('ai-candidates').waitFor();
+      assert((await page.getByTestId('ai-candidates').locator('> li').count()) === 3, '候補が3件でない');
+      assert((await page.getByLabel('キャプション', { exact: true }).inputValue()) === '', '採用前にキャプション欄が変わった');
+      await page.getByTestId('ai-apply-1').click();
+      assert((await page.getByLabel('キャプション', { exact: true }).inputValue()).includes('スタブ案2'), '採用が反映されない');
+      assert((await page.getByTestId('caption-preview').innerText()).includes('スタブ案2'), 'プレビューに出ない');
+      assert(geminiCalls.length >= 1 && geminiCalls[0].key === 'stub-key' && geminiCalls[0].body.includes('新メニューのカルビ'), '偽サーバーに届いていない');
+    });
+    await t('AIが失敗したら日本語のエラーを出し、入力した文章は消えない', async () => {
+      geminiFail = true;
+      await page.goto(`${BASE}/s/b-club/posts/new`);
+      await page.getByTestId('ai-open').click();
+      await page.getByLabel('元になる文章').fill('失敗テスト');
+      await page.getByTestId('ai-generate').click();
+      await page.getByTestId('form-error').waitFor();
+      assert((await page.getByTestId('form-error').innerText()).includes('AIの呼び出しに失敗'), 'エラー文言なし');
+      assert((await page.getByLabel('元になる文章').inputValue()) === '失敗テスト', '入力が消えた');
+      geminiFail = false;
+    });
+
     console.log('\n[CSV]');
     await t('CSVは数式インジェクションを無害化する', async () => {
       await page.goto(`${BASE}/s/b-club/casts/new`);
@@ -463,6 +510,7 @@ async function main() {
     await ctx?.close().catch(() => {});
     await browser.close().catch(() => {});
     server.kill();
+    geminiStub.close();
   }
   const failed = results.filter((r) => !r.ok);
   console.log(`\n結果: ${results.length - failed.length}/${results.length} 合格`);

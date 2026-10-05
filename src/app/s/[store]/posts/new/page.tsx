@@ -6,6 +6,7 @@ import { listQuestionSets } from '@/lib/domain/stats';
 import { listQuizSets } from '@/lib/domain/quiz';
 import { PageHeader } from '@/components/ui';
 import { PostForm } from '@/components/PostForm';
+import { aiConfigured } from '@/lib/ai';
 
 export default async function NewPost({ params, searchParams }: { params: Promise<{ store: string }>; searchParams: Promise<SP> }) {
   const { db, user, store, base, editable } = await pageCtx(params);
@@ -18,6 +19,7 @@ export default async function NewPost({ params, searchParams }: { params: Promis
       <PostForm
         storeKey={store.key}
         storeName={store.name}
+        aiReady={aiConfigured()}
         mode="create"
         casts={casts.map((c) => ({ id: c.id, name: c.display_name, active: c.status === 'active' }))}
         items={items}

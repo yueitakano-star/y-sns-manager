@@ -67,3 +67,10 @@ npm run build && npm run test:e2e   # 実ブラウザ(Edge)のUIテスト 23件�
 - 有効にするには環境変数 `SUPABASE_URL` と `SUPABASE_SERVICE_ROLE_KEY`（Project Settings → API の service_role）を設定します。キーはサーバー専用で、Gitやブラウザに出さないでください。
 - 1ファイルの上限はバケット設定(既定2GB。Supabase Proで、Storage設定のグローバル上限も要確認)と `MAX_UPLOAD_MB` の小さい方です。対応形式: JPEG/PNG/WebP/GIF/HEIC、MP4/MOV/WebM。
 - 素材詳細で、個別素材ごとの「＋ ファイルを追加」と、名前順に空き素材へ割り当てる「まとめてアップロード」が使えます。
+
+## AIでキャプションを作る（Gemini）
+
+- 投稿登録の「✨ AIでキャプションを作る・整える」で、ざっくりした文章から3案を作り、確認して「採用」するとキャプション欄に入ります（仕上がりプレビュー・文字数つき）。採用するまで内容は変わりません。
+- 有効にするには環境変数 `GEMINI_API_KEY`（Google AI Studio で取得。サーバー専用）を設定します。モデルは `GEMINI_MODEL`（既定 gemini-2.5-flash）で変更できます。
+- 送信するのは、入力した文章・店舗名・投稿先・タイトル・出演者の表示名のみ。写真・動画は送りません。1ユーザー1分10回まで。
+- 自動投稿（Instagram Graph API / TikTok Content Posting API）は未実装です。パスワードを預けての自動操作は規約違反・乗っ取りの危険があるため作りません。
