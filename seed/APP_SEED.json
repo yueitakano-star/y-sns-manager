@@ -21,6 +21,12 @@
       "name": "C-girl",
       "code": "CGL",
       "sort_order": 3
+    },
+    {
+      "key": "yakiniku-en",
+      "name": "焼肉En",
+      "code": "YEN",
+      "sort_order": 4
     }
   ],
   "material_categories": [

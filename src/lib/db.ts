@@ -146,7 +146,7 @@ interface SeedJson {
   }[];
 }
 
-/** 初期マスター(3店舗・20セット60問)を安定keyで冪等に投入。既存の実績は一切削除しない */
+/** 初期マスター(4店舗・質問20セット60問・クイズ20セット100問)を安定keyで冪等に投入。既存の実績は一切削除しない */
 export async function seedMaster(db: Db): Promise<void> {
   const seed = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'seed', 'APP_SEED.json'), 'utf8')) as SeedJson;
   await db.tx(async (q) => {
@@ -224,7 +224,7 @@ export function getDb(): Promise<Db> {
       if (process.env.AUTO_MIGRATE !== 'false') {
         await migrate(db);
         const [c] = await db.query<{ s: number; q: number; z: number }>("SELECT (SELECT count(*) FROM stores)::int AS s, (SELECT count(*) FROM questions)::int AS q, (SELECT count(*) FROM quiz_questions)::int AS z");
-        if (c.s < 3 || c.q < 60 || c.z < 100) await seedMaster(db);
+        if (c.s < 4 || c.q < 60 || c.z < 100) await seedMaster(db);
       }
       return db;
     })();

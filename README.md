@@ -1,6 +1,6 @@
 # 遊栄 SNS素材・投稿管理
 
-B-club / KINGYO / C-girl の **店舗 → キャスト → 素材 → 投稿** を記録・集計する社内業務用サイトです（日本語・スマホ優先）。
+B-club / KINGYO / C-girl / 焼肉En の **店舗 → キャスト → 素材 → 投稿** を記録・集計する社内業務用サイトです（日本語・スマホ優先）。
 SNSへの自動投稿やAPI連携は行いません（記録専用）。
 
 - スタック: Next.js 16 / TypeScript / Tailwind CSS 4 / PostgreSQL（本番）・PGlite（ローカル組み込みDB）

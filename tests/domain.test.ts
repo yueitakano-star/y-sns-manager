@@ -56,14 +56,14 @@ const post = (itemIds: string[], castIds: string[], target: Record<string, unkno
   createPosts(env.db, env.admin, B, { category: 'self_pr', title: 'PR投稿', itemIds, castIds, targets: [target], ...extra });
 
 describe('1. 初期投入', () => {
-  it('3店舗・20セット60問があり、再投入しても倍増しない', async () => {
+  it('4店舗・20セット60問があり、再投入しても倍増しない', async () => {
     const count = async (t: string) => (await env.db.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${t}`))[0].n;
-    expect(await count('stores')).toBe(3);
+    expect(await count('stores')).toBe(4);
     expect(await count('question_sets')).toBe(20);
     expect(await count('questions')).toBe(60);
     await seedMaster(env.db);
     await seedMaster(env.db);
-    expect(await count('stores')).toBe(3);
+    expect(await count('stores')).toBe(4);
     expect(await count('question_sets')).toBe(20);
     expect(await count('questions')).toBe(60);
     const sets = await listQuestionSets(env.db);

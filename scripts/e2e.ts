@@ -96,11 +96,11 @@ async function main() {
       assert((await page.getByTestId('login-error').innerText()).includes('正しくありません'), 'エラー文言なし');
       assert(page.url().includes('/login'), 'ログイン画面のまま');
     });
-    await t('ログイン後、最初に店舗選択(3店舗の大きなカード)', async () => {
+    await t('ログイン後、最初に店舗選択(4店舗の大きなカード)', async () => {
       await login(page, 'admin@example.com', 'e2e-password-1');
       await page.waitForURL(`${BASE}/`);
       for (const n of ['B-club', 'KINGYO', 'C-girl']) await page.getByRole('link', { name: new RegExp(n) }).first().waitFor();
-      assert((await page.locator('main ul > li').count()) === 3, '店舗カードが3件でない');
+      assert((await page.locator('main ul > li').count()) === 4, '店舗カードが4件でない');
     });
     await t('店舗を選ぶと店名が常時表示され、店舗切替ができる', async () => {
       await page.getByRole('link', { name: /B-club/ }).first().click();
