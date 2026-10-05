@@ -20,6 +20,7 @@ import { ErrorBanner, Field, SuccessBanner, toNum, useSubmitter } from './forms'
 import { uploadOne } from './uploader';
 import { downloadAll, withDownload } from '@/lib/download';
 import { ItemGallery, Viewer } from './Gallery';
+import { ShareButton } from './ShareButton';
 
 export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string; purpose: string }; today: string; showOtherLabel: boolean }) {
   const router = useRouter();
@@ -139,6 +140,7 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
   const postHref = `${base}/posts/new?${sel.map((id) => `item=${id}`).join('&')}`;
   const selFiles = items.filter((i) => sel.includes(i.id)).flatMap((i) => i.files.filter((f) => f.url).map((f) => ({ url: f.url as string, name: f.file_name })));
   const [dlBusy, setDlBusy] = useState(false);
+  const shareFiles = items.filter((i) => sel.includes(i.id)).flatMap((i) => i.files.filter((f) => f.url).map((f) => ({ url: f.url as string, name: f.file_name, type: f.content_type })));
   const [layout, setLayout] = useState<'gallery' | 'list'>('gallery');
   const [selectMode, setSelectMode] = useState(false);
   const [viewer, setViewer] = useState<number | null>(null);
@@ -184,6 +186,7 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
           <p className="text-sm font-bold">{sel.length}点を選択中{usedSel.length ? <span className="ml-2 font-normal text-slate-500">（投稿に紐付き{usedSel.length}点）</span> : null}</p>
           <div className="flex flex-wrap items-center gap-2">
             {selFiles.length ? <button type="button" className="btn-mat" disabled={dlBusy} data-testid="download-selected" onClick={async () => { setDlBusy(true); await downloadAll(selFiles); setDlBusy(false); }}>{dlBusy ? '保存中…' : `⬇ ${selFiles.length}件を保存`}</button> : null}
+            <ShareButton files={shareFiles} />
             {editable ? (
               <>
                 <select aria-label="変更後の状態" className="input !w-auto" value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as MaterialStatus)} data-testid="bulk-status">

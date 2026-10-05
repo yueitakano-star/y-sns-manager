@@ -7,6 +7,7 @@ import { updateItemAction } from '@/app/actions';
 import { MATERIAL_STATES, MATERIAL_STATE_LABEL, type MaterialStatus } from '@/lib/constants';
 import { withDownload } from '@/lib/download';
 import { ErrorBanner, useSubmitter } from './forms';
+import { ShareButton } from './ShareButton';
 
 export interface GalleryItem {
   id: string;
@@ -135,6 +136,7 @@ export function Viewer({ storeKey, base, items, index, editable, onClose, onInde
             </>
           ) : <span className="rounded-lg bg-white/15 px-3 py-2">{MATERIAL_STATE_LABEL[it.status]}</span>}
           {file?.url ? <a className="rounded-lg bg-white/15 px-4 py-2 font-semibold" href={withDownload(file.url, file.file_name)} download={file.file_name} data-testid="viewer-download">⬇ 保存</a> : null}
+          {file?.url ? <ShareButton className="rounded-lg bg-white/15 px-4 py-2 font-semibold" files={[{ url: file.url, name: file.file_name, type: file.content_type }]} /> : null}
           {editable ? <Link className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold" href={`${base}/posts/new?item=${it.id}`}>この素材で投稿登録</Link> : null}
         </div>
         <ErrorBanner message={error} />
