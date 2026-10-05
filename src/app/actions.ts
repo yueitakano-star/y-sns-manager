@@ -24,6 +24,7 @@ import {
 import { createPosts, updatePost, voidPost } from '@/lib/domain/posts';
 import type { Role } from '@/lib/constants';
 import { supabaseStorage } from '@/lib/storage';
+import { createArchiveLink, updateArchiveLink, voidArchiveLink } from '@/lib/domain/archive';
 import { requireRole } from '@/lib/access';
 import { checkAiRate, generateCaptions } from '@/lib/ai';
 import { prepareUpload, registerFile, removeFile } from '@/lib/domain/files';
@@ -272,5 +273,27 @@ export async function bulkItemStatusAction(storeKey: string, input: unknown) {
   return run(async () => {
     const { db, user, store } = await ctx(storeKey);
     return updateItemsStatus(db, user, store.id, input);
+  });
+}
+
+// ---------- 過去素材置き場（Googleドライブ等のリンク台帳） ----------
+export async function createArchiveAction(storeKey: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    return createArchiveLink(db, user, store.id, input);
+  });
+}
+
+export async function updateArchiveAction(storeKey: string, linkId: string, input: unknown) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    await updateArchiveLink(db, user, store.id, linkId, input);
+  });
+}
+
+export async function voidArchiveAction(storeKey: string, linkId: string, reason: string) {
+  return run(async () => {
+    const { db, user, store } = await ctx(storeKey);
+    await voidArchiveLink(db, user, store.id, linkId, reason);
   });
 }

@@ -449,6 +449,28 @@ async function main() {
       assert(values.filter((v) => v === 'unusable').length === 3, `一括変更が反映されていない: ${values.join(',')}`);
     });
 
+    console.log('\n[過去素材置き場]');
+    await t('過去素材置き場: ドライブのリンクを登録→一覧→キャスト詳細に表示→不正URLは拒否', async () => {
+      await page.goto(`${BASE}/s/b-club/archive/new`);
+      await page.getByLabel(/^タイトル/).fill('2025春 撮影まとめ');
+      await page.getByLabel(/^リンク/).fill('javascript:alert(1)');
+      await page.getByTestId('archive-submit').click();
+      await page.getByTestId('error-a-url').waitFor();
+      await page.getByLabel(/^リンク/).fill('https://drive.google.com/drive/folders/e2e123');
+      await page.locator('label', { hasText: 'Aさん' }).first().click();
+      await page.getByTestId('archive-submit').click();
+      await page.getByTestId('archive-saved').waitFor();
+      const item = page.getByTestId('archive-list').locator('> li').first();
+      assert((await item.innerText()).includes('Googleドライブ') && (await item.innerText()).includes('Aさん'), '一覧に出ない');
+      assert((await item.getByTestId('archive-open').getAttribute('href')) === 'https://drive.google.com/drive/folders/e2e123', 'リンク先');
+      assert((await item.getByTestId('archive-open').getAttribute('rel'))?.includes('noopener') === true, 'noopenerなし');
+      await page.goto(`${BASE}/s/b-club/casts`);
+      await page.getByRole('link', { name: 'Aさん' }).first().click();
+      assert((await page.getByTestId('cast-archive').innerText()).includes('2025春 撮影まとめ'), 'キャスト詳細に出ない');
+      await page.goto(`${BASE}/s/kingyo/archive`);
+      assert(!(await page.locator('body').innerText()).includes('2025春 撮影まとめ'), '他店舗に表示された');
+    });
+
     console.log('\n[CSV]');
     await t('CSVは数式インジェクションを無害化する', async () => {
       await page.goto(`${BASE}/s/b-club/casts/new`);

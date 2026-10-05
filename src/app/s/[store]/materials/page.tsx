@@ -98,7 +98,7 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
 
   return (
     <>
-      <PageHeader kind="mat" title="素材" sub={`${store.name}・素材は「投稿」とは別の記録です`} actions={editable ? <LinkBtn href={`${base}/materials/new`} kind="mat">＋ 素材登録</LinkBtn> : null} />
+      <PageHeader kind="mat" title="素材" sub={`${store.name}・素材は「投稿」とは別の記録です`} actions={<>{editable ? <LinkBtn href={`${base}/materials/new`} kind="mat">＋ 素材登録</LinkBtn> : null}<LinkBtn href={`${base}/archive`}>📁 過去素材置き場（ドライブ）</LinkBtn></>} />
       {tabs}
       {layoutToggle}
       {filterForm}

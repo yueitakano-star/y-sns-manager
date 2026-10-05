@@ -10,6 +10,7 @@ import { ANSWER_LABEL, QUESTION_COUNT, SET_COUNT, setLabel } from '@/lib/constan
 import { parsePeriod } from '@/lib/jst';
 import { Badge, Empty, LinkBtn, PageHeader, SectionTitle, SetBadge, Stat } from '@/components/ui';
 import { BatchList, PostList } from '@/components/lists';
+import { listArchiveLinks, isDriveUrl } from '@/lib/domain/archive';
 
 export default async function CastDetail({ params, searchParams }: { params: Promise<{ store: string; id: string }>; searchParams: Promise<SP> }) {
   const { id } = await params;
@@ -29,6 +30,7 @@ export default async function CastDetail({ params, searchParams }: { params: Pro
     listPosts(db, user, store.id, { castId: id }),
   ]);
   const s = rows.find((r) => r.id === id)!;
+  const archive = await listArchiveLinks(db, user, store.id, { castId: id });
   const cells = progress[id] ?? {};
   const setFilter = Number(one(sp.set)) || null;
   const shownHistory = setFilter ? history.filter((h) => h.set_number === setFilter) : history;
@@ -101,6 +103,20 @@ export default async function CastDetail({ params, searchParams }: { params: Pro
 
       <SectionTitle kind="mat" right={<span>{batches.length}件</span>}>素材一覧</SectionTitle>
       {batches.length ? <BatchList rows={batches} base={base} /> : <Empty>このキャストの素材はまだありません。</Empty>}
+
+      <SectionTitle kind="mat" right={<Link href={`${base}/archive?cast=${id}`} className="underline">すべて見る</Link>}>過去素材（ドライブのリンク）</SectionTitle>
+      {archive.length ? (
+        <ul className="space-y-2" data-testid="cast-archive">
+          {archive.map((a) => (
+            <li key={a.id} className="card flex flex-wrap items-center justify-between gap-2 !p-3">
+              <span><Badge tone={isDriveUrl(a.url) ? 'green' : 'slate'}>{isDriveUrl(a.url) ? 'ドライブ' : 'リンク'}</Badge> <b>{a.title}</b>{a.shot_on ? <span className="ml-1 text-xs text-slate-500">{a.shot_on}</span> : null}</span>
+              <a className="btn-mat !min-h-9" href={a.url} target="_blank" rel="noopener noreferrer nofollow">開く ↗</a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <Empty action={editable ? <LinkBtn href={`${base}/archive/new?cast=${id}`} kind="mat">＋ リンクを登録</LinkBtn> : undefined}>このキャストの過去素材リンクはまだありません。</Empty>
+      )}
 
       <div id="history" />
       <SectionTitle right={setFilter ? <Link href="?" className="underline">全セットを表示</Link> : undefined}>
