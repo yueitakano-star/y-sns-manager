@@ -9,6 +9,8 @@ import { getStoreForActor, listAccessibleStores, type Store } from './access';
 import type { Role } from './constants';
 import { AppError } from './errors';
 
+let guestId: string | null = null;
+
 export const SESSION_COOKIE = 'sns_session';
 
 export const cookieOptions = (expires?: Date) => ({
@@ -24,18 +26,25 @@ export const currentUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   const db = await getDb();
   const u = await getSessionUser(db, token);
-  if (u) return u;
+  if (u) return { ...u, roleCache: new Map() };
   // 一時的なログイン省略（ローカル組み込みDB専用）。共有DB(DATABASE_URL)では無効
   // NO_AUTH=true は共有DBでも有効（URLを知っていれば誰でも操作できるので一時利用のみ）
   if (process.env.NO_AUTH === 'true' || (process.env.DEV_NO_AUTH === 'true' && !process.env.DATABASE_URL)) {
     const email = 'local-dev@example.local';
-    // 同時アクセスでも競合しないよう ON CONFLICT で作成（ランダムなパスワードなので通常ログインには使えない）
-    await db.query(
-      `INSERT INTO users(email, display_name, password_hash, is_system_admin) VALUES ($1,$2,$3,true) ON CONFLICT (email) DO NOTHING`,
-      [email, 'ローカル利用者', hashPassword(randomBytes(24).toString('base64url'))],
-    );
-    const rows = await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email]);
-    return { userId: rows[0].id, email, displayName: 'ローカル利用者', isSystemAdmin: true };
+    // ゲスト用ユーザーIDは一度だけ解決して使い回す（毎回のハッシュ計算・DBアクセスを避ける）
+    if (!guestId) {
+      let rows = await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email]);
+      if (!rows[0]) {
+        // 同時アクセスでも競合しないよう ON CONFLICT で作成（ランダムなパスワードなので通常ログインには使えない）
+        await db.query(
+          `INSERT INTO users(email, display_name, password_hash, is_system_admin) VALUES ($1,$2,$3,true) ON CONFLICT (email) DO NOTHING`,
+          [email, 'ローカル利用者', hashPassword(randomBytes(24).toString('base64url'))],
+        );
+        rows = await db.query<{ id: string }>('SELECT id FROM users WHERE email = $1', [email]);
+      }
+      guestId = rows[0].id;
+    }
+    return { userId: guestId, email, displayName: 'ローカル利用者', isSystemAdmin: true, roleCache: new Map() };
   }
   return null;
 });
@@ -46,7 +55,8 @@ export async function requireUser(): Promise<SessionUser> {
   return u;
 }
 
-export async function requireStore(storeKey: string): Promise<{ user: SessionUser; store: Store; role: Role }> {
+// 同じリクエスト内（レイアウトとページ）で店舗解決を1回にまとめる
+export const requireStore = cache(async (storeKey: string): Promise<{ user: SessionUser; store: Store; role: Role }> => {
   const user = await requireUser();
   const db = await getDb();
   try {
@@ -56,7 +66,7 @@ export async function requireStore(storeKey: string): Promise<{ user: SessionUse
     if (e instanceof AppError && e.code === 'not_found') redirect('/?denied=1');
     throw e;
   }
-}
+});
 
 export async function userStores(user: SessionUser) {
   return listAccessibleStores(await getDb(), user);

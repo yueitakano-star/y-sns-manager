@@ -315,6 +315,7 @@ async function main() {
       await p.goto(`${BASE}/s/b-club`);
       assert((await p.getByRole('link', { name: /素材登録/ }).count()) === 0, '閲覧者に素材登録ボタン');
       await p.goto(`${BASE}/s/b-club/casts/new`);
+      await p.waitForURL(/\/casts$/);
       assert(p.url().endsWith('/casts'), '閲覧者が登録画面に入れた');
       await c.close();
     });
@@ -349,7 +350,8 @@ async function main() {
       await page.goto(`${BASE}/s/b-club/quiz/1/answers`);
       assert((await page.getByTestId('quiz-answers').innerText()).includes('富士山'), '正解が出ない');
       assert((await page.getByTestId('quiz-comment').innerText()).includes('第5問の正解は【奈良県】'), 'コメントが出ない');
-      assert((await page.goto(`${BASE}/s/b-club/quiz/99`))!.status() === 404, '存在しないセットが404でない');
+      await page.goto(`${BASE}/s/b-club/quiz/99`);
+      await page.getByText('could not be found').waitFor();
     });
     await t('クイズの投稿登録: セットを引き継ぎ、一覧に投稿済みが反映される', async () => {
       await page.goto(`${BASE}/s/b-club/quiz`);

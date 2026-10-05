@@ -5,6 +5,8 @@ import { forbidden, notFound } from './errors';
 export interface Actor {
   userId: string;
   isSystemAdmin: boolean;
+  /** 1リクエスト内だけ使う店舗権限のキャッシュ（currentUserが作る） */
+  roleCache?: Map<string, Role | null>;
 }
 
 export interface Store {
@@ -20,11 +22,14 @@ const RANK: Record<Role, number> = { viewer: 1, editor: 2, admin: 3 };
 /** 店舗に対するユーザーの権限。権限なしは null（システム管理者は全店舗で管理者） */
 export async function getStoreRole(q: Queryable, actor: Actor, storeId: string): Promise<Role | null> {
   if (actor.isSystemAdmin) return 'admin';
+  if (actor.roleCache?.has(storeId)) return actor.roleCache.get(storeId) ?? null;
   const rows = await q.query<{ role: Role }>(
     'SELECT role FROM user_store_memberships WHERE user_id = $1 AND store_id = $2',
     [actor.userId, storeId],
   );
-  return rows[0]?.role ?? null;
+  const role = rows[0]?.role ?? null;
+  actor.roleCache?.set(storeId, role);
+  return role;
 }
 
 /** 店舗IDに対し最低限の権限を要求する。権限なしは「存在しない」と同じ応答にして店舗の存在を漏らさない */

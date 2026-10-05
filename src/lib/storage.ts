@@ -9,6 +9,8 @@ export interface StorageApi {
   createDownloadUrl(path: string, expiresInSec?: number): Promise<string | null>;
   /** 複数ファイルの閲覧用署名付きURLをまとめて取得（path → URL） */
   createDownloadUrls(paths: string[], expiresInSec?: number): Promise<Record<string, string>>;
+  /** グリッド用: 画像は縮小サムネイル、それ以外は通常の署名付きURL（path → URL） */
+  createThumbUrls(files: { path: string; type: string }[]): Promise<Record<string, string>>;
   remove(path: string): Promise<void>;
 }
 
@@ -48,6 +50,24 @@ export const supabaseStorage: StorageApi = {
     if (!r.ok) return out;
     const j = (await r.json()) as { path: string; signedURL: string | null }[];
     for (const x of j) if (x.signedURL) out[x.path] = `${base()}/storage/v1${x.signedURL}`;
+    return out;
+  },
+  async createThumbUrls(files) {
+    const out: Record<string, string> = {};
+    const resizable = files.filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type));
+    const rest = files.filter((f) => !resizable.includes(f));
+    await Promise.all(
+      resizable.map(async (f) => {
+        const r = await call('POST', `/object/sign/${bucket()}/${enc(f.path)}`, { expiresIn: 3600, transform: { width: 400, height: 400, resize: 'cover', quality: 70 } });
+        if (!r.ok) {
+          rest.push(f);
+          return;
+        }
+        const j = (await r.json()) as { signedURL: string };
+        out[f.path] = `${base()}/storage/v1${j.signedURL}`;
+      }),
+    );
+    Object.assign(out, await supabaseStorage.createDownloadUrls(rest.map((f) => f.path)));
     return out;
   },
   async remove(path) {

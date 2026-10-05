@@ -213,7 +213,14 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
       [storeId],
     )
   ).reduce((a, r) => ({ ...a, [r.status]: r.n }), { active: 0, inactive: 0 } as { active: number; inactive: number });
-  const stats = await castStats(q, actor, storeId, period);
+  const ans = (
+    await q.query<{ answered: number; done: number }>(
+      `WITH va AS (${VALID_ANSWERS})
+       SELECT (SELECT count(*) FROM (SELECT DISTINCT cast_id, question_id FROM va WHERE status='answered') x)::int AS answered,
+              (SELECT count(*) FROM (SELECT cast_id, set_number FROM va WHERE status='answered' GROUP BY cast_id, set_number HAVING count(DISTINCT question_id) = 3) y)::int AS done`,
+      [storeId],
+    )
+  )[0];
   const common = (
     await q.query<{ media_kind: string; n: number }>(
       `WITH vi AS (${VALID_ITEMS})
@@ -250,8 +257,8 @@ export async function storeStats(q: Queryable, actor: Actor, storeId: string, pe
     publishedUnlinked,
     castCount,
     interview: {
-      answeredQuestionsTotal: stats.reduce((a, c) => a + c.answered_questions, 0),
-      doneSetsTotal: stats.reduce((a, c) => a + c.done_sets, 0),
+      answeredQuestionsTotal: ans.answered,
+      doneSetsTotal: ans.done,
     },
     common,
   };

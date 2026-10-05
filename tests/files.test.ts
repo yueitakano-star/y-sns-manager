@@ -13,6 +13,7 @@ const storage: StorageApi = {
   createUploadUrl: async (p) => `https://example.test/upload/${p}`,
   createDownloadUrl: async (p) => `https://example.test/dl/${p}`,
   createDownloadUrls: async (ps) => Object.fromEntries(ps.map((p) => [p, `https://example.test/dl/${p}`])),
+  createThumbUrls: async (fs) => Object.fromEntries(fs.map((f) => [f.path, `https://example.test/th/${f.path}`])),
   remove: async (p) => { removed.push(p); },
 };
 beforeAll(async () => { env = await setupEnv(); });

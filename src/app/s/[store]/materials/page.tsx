@@ -50,7 +50,7 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
     </div>
   );
   const GRID_MAX = 120;
-  const sign = async (paths: string[]): Promise<Record<string, string>> => (supabaseStorage.configured() ? supabaseStorage.createDownloadUrls(paths) : {});
+  const sign = async (files: { path: string; type: string }[]): Promise<Record<string, string>> => (supabaseStorage.configured() ? supabaseStorage.createThumbUrls(files) : {});
 
   let body: React.ReactNode;
   let count = 0;
@@ -61,7 +61,7 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
     if (layout === 'grid' && rows.length) {
       const shown = rows.slice(0, GRID_MAX);
       const covers = await listCoverFiles(db, user, store.id, shown.map((r) => r.id));
-      const urls = await sign(covers.map((c) => c.storage_path));
+      const urls = await sign(covers.map((c) => ({ path: c.storage_path, type: c.content_type })));
       thumbs = Object.fromEntries(covers.filter((c) => urls[c.storage_path]).map((c) => [c.batch_id, { url: urls[c.storage_path], type: c.content_type }]));
       rows.length = Math.min(rows.length, GRID_MAX);
     }
@@ -83,7 +83,7 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
       const files = await listFiles(db, user, store.id, shown.map((i) => i.id));
       const first = new Map<string, { path: string; type: string }>();
       for (const fl of files) if (!first.has(fl.item_id) || (fl.content_type.startsWith('image/') && !first.get(fl.item_id)!.type.startsWith('image/'))) first.set(fl.item_id, { path: fl.storage_path, type: fl.content_type });
-      const urls = await sign([...first.values()].map((x) => x.path));
+      const urls = await sign([...first.values()].map((x) => ({ path: x.path, type: x.type })));
       const thumbs: Record<string, Thumb> = {};
       for (const [id, x] of first) if (urls[x.path]) thumbs[id] = { url: urls[x.path], type: x.type };
       body = <ItemGrid items={shown} base={base} thumbs={thumbs} action={`${base}/posts/new`} />;
