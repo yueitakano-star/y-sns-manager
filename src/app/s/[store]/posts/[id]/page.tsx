@@ -7,6 +7,9 @@ import { PLATFORM_LABEL, POST_CATEGORY_LABEL } from '@/lib/constants';
 import { formatJaDateTime } from '@/lib/jst';
 import { Badge, LinkBtn, PageHeader, PostStatusBadge, SectionTitle } from '@/components/ui';
 import { VoidPostButton } from '@/components/VoidPostButton';
+import { listFiles } from '@/lib/domain/files';
+import { supabaseStorage } from '@/lib/storage';
+import { withDownload } from '@/lib/download';
 
 export default async function PostDetail({ params, searchParams }: { params: Promise<{ store: string; id: string }>; searchParams: Promise<SP> }) {
   const { id } = await params;
@@ -21,6 +24,9 @@ export default async function PostDetail({ params, searchParams }: { params: Pro
     [id],
   );
   const created = one(sp.created);
+  const fileRows = await listFiles(db, user, store.id, p.item_ids);
+  const codeOf = new Map(items.map((i) => [i.id, i.code]));
+  const dl = supabaseStorage.configured() && fileRows.length ? await supabaseStorage.createDownloadUrls(fileRows.map((f) => f.storage_path)) : {};
   return (
     <>
       {created ? (
@@ -58,6 +64,19 @@ export default async function PostDetail({ params, searchParams }: { params: Pro
       ) : (
         <p className="text-sm text-slate-600">素材は紐付けられていません（素材使用数には数えません）。</p>
       )}
+      {fileRows.length ? (
+        <>
+          <SectionTitle kind="mat">投稿に使うファイル（保存してSNSアプリで投稿）</SectionTitle>
+          <ul className="space-y-1" data-testid="post-files">
+            {fileRows.map((f) => (
+              <li key={f.id} className="card flex flex-wrap items-center justify-between gap-2 !p-2.5 text-sm">
+                <span><span className="font-mono text-xs text-slate-500">{codeOf.get(f.item_id)}</span> {f.file_name}</span>
+                {dl[f.storage_path] ? <a className="btn-mat !min-h-9" href={withDownload(dl[f.storage_path], f.file_name)} download={f.file_name}>⬇ 保存</a> : <span className="text-xs text-slate-500">保存先が未設定です</span>}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
       {editable ? <div className="mt-8"><VoidPostButton storeKey={store.key} postId={p.id} base={base} /></div> : null}
     </>
   );

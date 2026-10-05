@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { BatchListRow, PickerItem } from '@/lib/domain/materials';
 import { CATEGORY_BY_KEY, MEDIA_LABEL, PURPOSE_LABEL, UNIT } from '@/lib/constants';
 import { Badge, MaterialStatusBadge } from './ui';
+import { withDownload } from '@/lib/download';
 
 export interface Thumb {
   url: string;
@@ -53,7 +54,7 @@ export function BatchGrid({ rows, base, thumbs }: { rows: BatchListRow[]; base: 
 }
 
 /** 個別素材のグリッド表示（チェックして投稿登録へ進める） */
-export function ItemGrid({ items, base, thumbs, action }: { items: PickerItem[]; base: string; thumbs: Record<string, Thumb>; action: string }) {
+export function ItemGrid({ items, base, thumbs, downloads, action }: { items: PickerItem[]; base: string; thumbs: Record<string, Thumb>; downloads: Record<string, { url: string; name: string }>; action: string }) {
   return (
     <form method="get" action={action}>
       <div className="mb-2 flex items-center justify-between gap-2">
@@ -75,6 +76,7 @@ export function ItemGrid({ items, base, thumbs, action }: { items: PickerItem[];
             <div className="space-y-0.5 p-2">
               <p className="truncate font-mono text-xs font-semibold">{i.code}</p>
               <p className="truncate text-xs text-slate-600">{i.cast_names.length ? i.cast_names.join('、') : '店舗共通'}</p>
+              {downloads[i.id] ? <a className="block text-xs font-bold text-mat-700 underline" href={withDownload(downloads[i.id].url, downloads[i.id].name)} download={downloads[i.id].name} data-testid="grid-download">⬇ 保存</a> : null}
               <div className="flex flex-wrap gap-1">
                 <MaterialStatusBadge status={i.status} />
                 {i.purpose ? <Badge tone="blue">{PURPOSE_LABEL[i.purpose as keyof typeof PURPOSE_LABEL]}</Badge> : null}

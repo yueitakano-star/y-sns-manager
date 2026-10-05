@@ -86,7 +86,11 @@ export default async function MaterialsPage({ params, searchParams }: { params: 
       const urls = await sign([...first.values()].map((x) => ({ path: x.path, type: x.type })));
       const thumbs: Record<string, Thumb> = {};
       for (const [id, x] of first) if (urls[x.path]) thumbs[id] = { url: urls[x.path], type: x.type };
-      body = <ItemGrid items={shown} base={base} thumbs={thumbs} action={`${base}/posts/new`} />;
+      const originals = supabaseStorage.configured() ? await supabaseStorage.createDownloadUrls([...first.values()].map((x) => x.path)) : {};
+      const names = new Map(files.map((fl) => [fl.storage_path, fl.file_name]));
+      const downloads: Record<string, { url: string; name: string }> = {};
+      for (const [id, x] of first) if (originals[x.path]) downloads[id] = { url: originals[x.path], name: names.get(x.path) ?? 'file' };
+      body = <ItemGrid items={shown} base={base} thumbs={thumbs} downloads={downloads} action={`${base}/posts/new`} />;
     } else {
       body = items.length ? <ItemSelectList items={items.slice(0, 300)} castNames action={`${base}/posts/new`} /> : <Empty>該当する個別素材はありません。</Empty>;
     }

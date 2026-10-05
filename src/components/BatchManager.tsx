@@ -17,6 +17,7 @@ import { ANSWER_LABEL, MATERIAL_STATES, PURPOSES, type AnswerStatus, type Materi
 import { removeFileAction } from '@/app/actions';
 import { ErrorBanner, Field, SuccessBanner, toNum, useSubmitter } from './forms';
 import { uploadOne } from './uploader';
+import { downloadAll, withDownload } from '@/lib/download';
 
 export function BatchEditForm({ storeKey, batchId, initial, today, showOtherLabel }: { storeKey: string; batchId: string; initial: { title: string; shotOn: string; status: MaterialStatus; storageUrl: string; memo: string; otherLabel: string; purpose: string }; today: string; showOtherLabel: boolean }) {
   const router = useRouter();
@@ -133,6 +134,8 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
   const toggle = (id: string) => setSel((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const usedSel = items.filter((i) => sel.includes(i.id) && (i.published_count > 0 || i.scheduled_count > 0));
   const postHref = `${base}/posts/new?${sel.map((id) => `item=${id}`).join('&')}`;
+  const selFiles = items.filter((i) => sel.includes(i.id)).flatMap((i) => i.files.filter((f) => f.url).map((f) => ({ url: f.url as string, name: f.file_name })));
+  const [dlBusy, setDlBusy] = useState(false);
 
   return (
     <div>
@@ -143,7 +146,10 @@ export function ItemsManager({ storeKey, base, batchId, items, castOptions, edit
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <button type="button" className="btn-sub" onClick={() => setSel(sel.length === items.length ? [] : items.map((i) => i.id))}>{sel.length === items.length ? '選択を解除' : 'すべて選択'}</button>
         {editable ? (
-          sel.length ? <Link className="btn-post" href={postHref}>選択した{sel.length}点で投稿登録 →</Link> : <span className="text-sm text-slate-500">チェックした素材で投稿登録に進めます。</span>
+          sel.length ? <>
+            <Link className="btn-post" href={postHref}>選択した{sel.length}点で投稿登録 →</Link>
+            {selFiles.length ? <button type="button" className="btn-mat" disabled={dlBusy} data-testid="download-selected" onClick={async () => { setDlBusy(true); await downloadAll(selFiles); setDlBusy(false); }}>{dlBusy ? '保存中…' : `⬇ 選択した${selFiles.length}件のファイルを保存`}</button> : null}
+          </> : <span className="text-sm text-slate-500">チェックした素材で投稿登録に進めます。</span>
         ) : null}
       </div>
 
@@ -311,6 +317,7 @@ function FileList({ storeKey, item, canUpload }: { storeKey: string; item: ItemV
               ) : null}
               {f.url ? <a className="block max-w-40 truncate underline" href={f.url} target="_blank" rel="noopener noreferrer">{f.file_name}</a> : <span>{f.file_name}</span>}
               <span className="text-slate-500">{fmtSize(f.size_bytes)}</span>
+              {f.url ? <a className="ml-2 font-bold text-mat-700 underline" href={withDownload(f.url, f.file_name)} download={f.file_name} data-testid="file-download">⬇ 保存</a> : null}
               {canUpload ? (
                 <button type="button" className="ml-2 text-red-700 underline" disabled={rm.busy} onClick={() => { if (window.confirm('このファイルを一覧から外します。よろしいですか？')) void rm.submit(() => removeFileAction(storeKey, f.id), () => router.refresh()); }}>外す</button>
               ) : null}
