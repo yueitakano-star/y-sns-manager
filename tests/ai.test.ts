@@ -59,3 +59,13 @@ describe('AIキャプション（Gemini）', () => {
     expect(() => checkAiRate('u1', t + 61_000)).not.toThrow();
   });
 });
+
+describe('DATABASE_URL の正規化', () => {
+  it('Supabaseのpooler(:5432)はTransaction mode(:6543)に切り替える。他はそのまま', async () => {
+    const { normalizeDatabaseUrl } = await import('../src/lib/db');
+    expect(normalizeDatabaseUrl('postgresql://postgres.abc:pw@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres')).toBe('postgresql://postgres.abc:pw@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres');
+    expect(normalizeDatabaseUrl('postgresql://postgres.abc:pw@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres')).toContain(':6543/');
+    expect(normalizeDatabaseUrl('postgresql://u:p@db.abc.supabase.co:5432/postgres')).toContain(':5432/');
+    expect(normalizeDatabaseUrl('postgresql://u:p@localhost:5432/x')).toBe('postgresql://u:p@localhost:5432/x');
+  });
+});

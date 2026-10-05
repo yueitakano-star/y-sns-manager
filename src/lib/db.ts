@@ -60,13 +60,33 @@ async function createPglite(dir: string): Promise<Db> {
   };
 }
 
-async function createPg(url: string): Promise<Db> {
+/**
+ * Supabaseのpooler(Session mode, :5432)は同時接続が約15本で、サーバーレスではすぐ上限(EMAXCONNSESSION)になる。
+ * 同じホストの Transaction mode(:6543) に自動で切り替える。直接接続や他のDBはそのまま。
+ */
+export function normalizeDatabaseUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    if (u.hostname.endsWith('.pooler.supabase.com') && (u.port === '' || u.port === '5432')) {
+      u.port = '6543';
+      return u.toString();
+    }
+  } catch {
+    // URLとして解釈できなければそのまま渡す
+  }
+  return url;
+}
+
+async function createPg(rawUrl: string): Promise<Db> {
+  const url = normalizeDatabaseUrl(rawUrl);
   const pgMod = await import('pg');
   const { Pool, types } = pgMod.default ?? pgMod;
   const pool = new Pool({
     connectionString: url,
-    max: 5,
-    options: '-c timezone=UTC',
+    // サーバーレスでは1インスタンスあたりの接続を小さく保ち、使い終わったら早めに閉じる
+    max: Number(process.env.PG_POOL_MAX) || 4,
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
     ssl: /sslmode=disable|localhost|127\.0\.0\.1/.test(url) ? undefined : { rejectUnauthorized: false },
   });
   // 型パーサーはPool単位で指定できないためグローバルに設定
